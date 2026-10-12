@@ -58,6 +58,9 @@ Umgebungsvariablen (alle optional): `DJANGO_DEBUG` (lokal Standard `1`, im Conta
   `bestaetigt` (in `Team.save()`); wird `bezahlt` zurückgenommen, wieder `angemeldet`.
   Warteliste und Absage ändert das nicht. Kapitän kann bis Meldeschluss abmelden (`abgesagt`).
   Nachrücken von der Warteliste entscheidet die Orga per Klick (nicht automatisch).
+- Zahlungs-Tracking im Admin (Teamliste): Haken "bezahlt" und Zahlungsart direkt in der Liste,
+  Kennzahlen aus `Turnier.zahlungsuebersicht()` (erwartet = Gebühr × Teams mit Startplatz),
+  Filter "Unbezahlt (mit Startplatz)", Aktion "Von der Warteliste nachrücken".
 - Spielernamen sind **öffentlich** (Teamliste). E-Mail und Zahlungsstatus sehen nur Orga und Kapitän.
 - Spiel-Phase (`Spiel.phase`): Gruppenspiel, Viertelfinale, Halbfinale, Spiel um Platz 3, Finale.
   K.-o.-Spiele haben keine Gruppe.

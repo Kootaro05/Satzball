@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db.models import Count
 from django.urls import reverse
 from django.utils.html import format_html
@@ -47,11 +47,11 @@ class ZahlungFilter(admin.SimpleListFilter):
     parameter_name = "zahlung"
 
     def lookups(self, request, model_admin):
-        return [("unbezahlt", "Unbezahlt"), ("bezahlt", "Bezahlt")]
+        return [("unbezahlt", "Unbezahlt (mit Startplatz)"), ("bezahlt", "Bezahlt")]
 
     def queryset(self, request, queryset):
         if self.value() == "unbezahlt":
-            return queryset.filter(bezahlt=False)
+            return queryset.filter(bezahlt=False, status__in=Team.STARTPLATZ_STATUS)
         if self.value() == "bezahlt":
             return queryset.filter(bezahlt=True)
         return queryset
@@ -64,6 +64,9 @@ class TeamAdmin(admin.ModelAdmin):
         "bezahlt", "bezahlt_am", "zahlungsart", "gruppe",
     ]
     list_filter = ["turnier", "status", ZahlungFilter, "zahlungsart"]
+    list_editable = ["bezahlt", "zahlungsart"]
+    show_facets = admin.ShowFacets.ALWAYS
+    actions = ["nachruecken"]
     search_fields = ["name", "kapitaen_name", "kapitaen_email", "spieler__vorname", "spieler__nachname"]
     list_select_related = ["turnier", "gruppe"]
     readonly_fields = ["bearbeitungslink"]
@@ -80,6 +83,33 @@ class TeamAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(_anzahl_spieler=Count("spieler", distinct=True))
+
+    def changelist_view(self, request, extra_context=None):
+        # Kennzahlen für das gefilterte Turnier, sonst für das aktuelle (Screen 06).
+        turnier_id = request.GET.get("turnier__id__exact")
+        turnier = Turnier.objects.filter(pk=turnier_id).first() if turnier_id else Turnier.aktuelles()
+        extra_context = extra_context or {}
+        if turnier:
+            extra_context["uebersicht_turnier"] = turnier
+            extra_context["uebersicht"] = turnier.zahlungsuebersicht()
+        return super().changelist_view(request, extra_context=extra_context)
+
+    @admin.action(description="Von der Warteliste nachrücken")
+    def nachruecken(self, request, queryset):
+        nachgerueckt = 0
+        for team in queryset.filter(status=Team.Status.WARTELISTE).select_related("turnier"):
+            team.status = Team.Status.ANGEMELDET
+            team.save()
+            nachgerueckt += 1
+            if team.turnier.belegte_plaetze > team.turnier.max_teams:
+                self.message_user(
+                    request, f"{team.turnier}: Jetzt mehr Teams mit Startplatz als max. Teams "
+                    f"({team.turnier.belegte_plaetze} von {team.turnier.max_teams}).", messages.WARNING,
+                )
+        if nachgerueckt:
+            self.message_user(request, f"{nachgerueckt} Team(s) von der Warteliste nachgerückt.", messages.SUCCESS)
+        else:
+            self.message_user(request, "Keines der gewählten Teams steht auf der Warteliste.", messages.WARNING)
 
     @admin.display(description="Spieler", ordering="_anzahl_spieler")
     def anzahl_spieler(self, obj):

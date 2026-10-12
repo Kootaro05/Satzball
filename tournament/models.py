@@ -90,6 +90,18 @@ class Turnier(models.Model):
     def freie_plaetze(self):
         return max(self.max_teams - self.belegte_plaetze, 0)
 
+    def zahlungsuebersicht(self):
+        """Kennzahlen für die Orga (Screen 06). Erwartet wird die Gebühr aller Teams mit Startplatz."""
+        teams = list(self.teams.only("status", "bezahlt"))
+        startplatz = [t for t in teams if t.hat_startplatz]
+        bezahlt = [t for t in teams if t.bezahlt]
+        return {
+            "eingegangen": self.startgebuehr_eur * len(bezahlt),
+            "erwartet": self.startgebuehr_eur * len(startplatz),
+            "unbezahlt": sum(1 for t in startplatz if not t.bezahlt),
+            "warteliste": sum(1 for t in teams if t.status == Team.Status.WARTELISTE),
+        }
+
     def clean(self):
         if self.min_spieler is not None and self.max_spieler is not None and self.min_spieler > self.max_spieler:
             raise ValidationError({"max_spieler": "Muss mindestens so groß sein wie min. Spieler."})
@@ -163,8 +175,10 @@ class Team(models.Model):
             self.bezahlt_am = self.bezahlt_am or timezone.localdate()
             if self.status == self.Status.ANGEMELDET:
                 self.status = self.Status.BESTAETIGT
-        elif self.status == self.Status.BESTAETIGT:
-            self.status = self.Status.ANGEMELDET
+        else:
+            self.bezahlt_am = None
+            if self.status == self.Status.BESTAETIGT:
+                self.status = self.Status.ANGEMELDET
         super().save(*args, **kwargs)
 
     @property
