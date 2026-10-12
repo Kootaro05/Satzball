@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titel %}{{ team.name }} bearbeiten{% endblock %}
+{% block kopf %}
+<header class="kopf">
+  <a class="kopf__link" href="{% url 'startseite' %}">{{ turnier.name }}</a>
+  <span class="badge badge--neutral">Kapitän-Link</span>
+</header>
+{% endblock %}
+{% block nav %}{% endblock %}
+{% block inhalt %}
+<h1 class="titel titel--m">{{ team.name }}</h1>
+
+<div class="kacheln kacheln--lose">
+  <div class="kachel">
+    <span class="kachel__label">Anmeldung</span>
+    {% include "tournament/_status.html" %}
+  </div>
+  <div class="kachel">
+    <span class="kachel__label">Startgebühr</span>
+    {% include "tournament/_zahlung.html" %}
+  </div>
+</div>
+
+{% if team.status == "abgesagt" %}
+  <div class="hinweis hinweis--fehler">Euer Team ist abgemeldet. Wollt ihr doch spielen, meldet euch bei der Orga.</div>
+{% elif team.status == "warteliste" %}
+  <div class="hinweis hinweis--warnung">Ihr steht auf der Warteliste. Sagt ein Team ab, rückt ihr nach.</div>
+{% else %}
+  <div class="stapel">
+    <div class="fortschritt">
+      <span class="erreicht">Angemeldet</span>
+      <span{% if team.bezahlt %} class="erreicht"{% endif %}>Bezahlt</span>
+      <span{% if team.status == "bestaetigt" %} class="erreicht"{% endif %}>Bestätigt</span>
+    </div>
+    {% if not team.bezahlt %}<span class="leise klein">Sobald die {{ turnier.startgebuehr_eur|floatformat:"-2" }} € eingegangen sind, bestätigt die Orga euer Team. <a href="#zahlung">Zahlungsinfos</a></span>{% endif %}
+  </div>
+{% endif %}
+
+{% if darf_aendern %}
+  <div class="countdown">
+    <span class="countdown__zahl">{{ turnier.tage_bis_meldeschluss }}</span>
+    <span>Tag{{ turnier.tage_bis_meldeschluss|pluralize:"e" }} bis Meldeschluss. Änderungen sind bis <b>{{ turnier.meldeschluss|date:"j.n., H:i" }} Uhr</b> möglich.</span>
+  </div>
+
+  <form method="post" class="formular" novalidate>
+    {% csrf_token %}
+    {% include "tournament/_spieler_formset.html" with titel="Spielerliste" %}
+    <button type="submit" class="btn">Änderungen speichern</button>
+  </form>
+
+  <form method="post" action="{% url 'team_abmelden' team.edit_token %}" class="mitte"
+        onsubmit="return confirm('Team wirklich abmelden? Das kann nur die Orga rückgängig machen.');">
+    {% csrf_token %}
+    <button type="submit" class="btn-link">Team abmelden</button>
+  </form>
+{% else %}
+  {% if team.status != "abgesagt" %}<div class="hinweis hinweis--warnung">Der Meldeschluss ist vorbei. Änderungen nur noch über die Orga.</div>{% endif %}
+  <div class="stapel">
+    <h2 class="zwischen">Spielerliste</h2>
+    <div class="liste">
+      {% for s in team.spieler.all %}<div class="liste__zeile"><span>{{ s.vorname }} {{ s.nachname }}</span></div>{% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+{% include "tournament/_zahlungsinfo.html" %}
+{% endblock %}
+{% block skripte %}{% if darf_aendern %}<script src="{% static 'js/spieler.js' %}"></script>{% endif %}{% endblock %}

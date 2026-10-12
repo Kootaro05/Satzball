@@ -1,0 +1,84 @@
+# CLAUDE.md – Satzball
+
+WebApp für interne Volleyball-Turniere an der DHSN Leipzig.
+
+**Verbindlich:** `docs/konzept.md` (Anforderungen, Datenmodell, Spielplan-Logik) und
+`docs/design.html` (UI-Entwurf, 8 Screens). Vor größeren Änderungen dort nachlesen.
+Bei Unklarheiten oder Widersprüchen nachfragen statt annehmen.
+
+## Leitprinzip
+
+Einfach, kein Overengineering. Eine Person baut und betreibt das nebenher.
+Jede Funktion muss sich gegen "geht auch mit einem Zettel" behaupten.
+
+## Stack (fest)
+
+- Python + Django, SQLite
+- Server-gerenderte Django-Templates (`templates/`), schlankes CSS, optional htmx
+- Django Admin als Orga-Backend
+- Kein SPA-Framework, keine separate API, keine Nutzerkonten für Spieler
+- Kapitäne bearbeiten ihr Team über einen geheimen Link (`Team.edit_token`)
+- Deployment: ein Docker-Container auf privatem VPS, Gunicorn + WhiteNoise
+
+## Struktur
+
+- `config/` – Django-Projekt (Settings, URLs)
+- `tournament/` – die eine App: Models, Admin, Views, Spielplan-Logik, Tests
+- `templates/` – Seiten (`base.html`, `tournament/`, `mail/`)
+- `static/` – `css/satzball.css` (Farben/Typo aus dem Design, Light + Dark), `js/spieler.js`,
+  `fonts/` (Barlow, lokal statt Google Fonts – Datenschutz)
+- `data/` – SQLite-Datei (`db.sqlite3`) und generierter `secret_key`; im Container
+  `/app/data`, dort liegt das Volume `satzball-data`. Nicht ins Git.
+
+Umgebungsvariablen (alle optional): `DJANGO_DEBUG` (lokal Standard `1`, im Container `0`),
+`DJANGO_SECRET_KEY` (sonst aus `data/secret_key`), `DJANGO_ALLOWED_HOSTS`,
+`DJANGO_CSRF_TRUSTED_ORIGINS` (z. B. `https://volleyball.example.de`, nötig hinter HTTPS-Proxy),
+`EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS`, `DEFAULT_FROM_EMAIL`
+(ohne `EMAIL_HOST` werden Mails nur in die Konsole/das Log geschrieben).
+
+## Fachliche Regeln
+
+- Turniermodus pro Turnier: `jeder_gegen_jeden` oder `gruppen_ko`
+- Zählmodus pro Turnier:
+  - `saetze`: `gewinnsaetze` 1/2/3 = Best of 1/3/5, `punkte_pro_satz`, `punkte_entscheidungssatz`
+  - `punkte`: ein Satz auf X Punkte (`punkte_pro_satz`), kein Unentschieden
+- Spiel speichert `saetze_a/b` und `punkte_a/b` (Satz-Modus: Ballpunkt-Summe, optional).
+  Keine Punkte je Satz (bewusst entschieden).
+- K.-o.-Spiele dürfen ohne Teams angelegt werden; dann zeigen `platzhalter_a/b`
+  z. B. "1. Gruppe B". Ein beendetes Spiel braucht beide Teams.
+- Die Tabelle wird **nie gespeichert**, sondern aus beendeten Spielen berechnet.
+- Tabellenwertung:
+  - Satz-Modus: Siege, Satzdifferenz, Ballpunktdifferenz, direkter Vergleich
+  - Punkte-Modus: Siege, Punktdifferenz, erzielte Punkte, direkter Vergleich
+- Paarungen per Kreismethode. Ungerade Teamzahl → "spielfrei"; das spielfreie Team pfeift.
+  2 Felder, kein Team doppelt im selben Slot.
+- Nur bestätigte **und** bezahlte Teams kommen in den Spielplan (`Team.objects.im_spielplan()`).
+- Team-Status: Anmeldung → `angemeldet` (Platz frei) oder `warteliste` (voll).
+  **Bezahlt = bestätigt:** Setzt die Orga `bezahlt`, wird ein angemeldetes Team automatisch
+  `bestaetigt` (in `Team.save()`); wird `bezahlt` zurückgenommen, wieder `angemeldet`.
+  Warteliste und Absage ändert das nicht. Kapitän kann bis Meldeschluss abmelden (`abgesagt`).
+  Nachrücken von der Warteliste entscheidet die Orga per Klick (nicht automatisch).
+- Spielernamen sind **öffentlich** (Teamliste). E-Mail und Zahlungsstatus sehen nur Orga und Kapitän.
+- Spiel-Phase (`Spiel.phase`): Gruppenspiel, Viertelfinale, Halbfinale, Spiel um Platz 3, Finale.
+  K.-o.-Spiele haben keine Gruppe.
+- Teams dürfen gelöscht werden, auch mit geplanten Spielen (`SET_NULL` am Spiel).
+  **Offen für Schritt 4:** Danach muss der Spielplan automatisch neu erzeugt werden.
+  Der Generator erstellt den Plan aus Anzahl der Teams und gewähltem Modus.
+- Abweichung vom Design: "Ergebnis eintragen" zeigt im Punkte-Modus Punktzähler
+  (z. B. 25 : 21 mit +/- Buttons) statt Sätzen.
+
+## Konventionen
+
+- Fachbegriffe und Feldnamen auf Deutsch wie im Konzept (ohne Umlaute: `kapitaen`, `bestaetigt`).
+- Validierung in `Model.clean()`, damit Admin und Formulare sie gemeinsam nutzen.
+- Spielplan- und Tabellenlogik als reine Funktionen mit Unit-Tests.
+
+## Befehle
+
+```bash
+python manage.py runserver
+python manage.py makemigrations tournament
+python manage.py test
+docker build -t satzball .
+docker run -p 8000:8000 -v satzball-data:/app/data satzball
+```

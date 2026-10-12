@@ -1,0 +1,14 @@
+{% if not team.bezahlt and team.status != "abgesagt" %}
+<div class="karte karte--flach" id="zahlung">
+  <div class="karte__teil" style="border-top:0">
+    <div class="kopfzeile"><h2 class="zwischen">Startgebühr zahlen</h2><span class="zahl">{{ turnier.startgebuehr_eur|floatformat:"-2" }} €</span></div>
+    <span class="leise klein">{% if team.status == "warteliste" %}Bitte erst zahlen, wenn ihr von der Warteliste nachrückt.{% else %}Bis {{ turnier.meldeschluss|date:"j.n." }} – danach rückt die Warteliste nach. Nach Eingang wird euer Team bestätigt.{% endif %}</span>
+  </div>
+  {% if turnier.zahlungsinfo %}
+  <div class="karte__teil">
+    <span>{{ turnier.zahlungsinfo|linebreaksbr }}</span>
+    <span class="leise klein">Verwendungszweck: <b>{{ turnier.name }} – {{ team.name }}</b></span>
+  </div>
+  {% endif %}
+</div>
+{% endif %}

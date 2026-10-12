@@ -1,0 +1,8 @@
+<div class="spieler-zeile"{% if form.DELETE.value %} hidden{% endif %}>
+  {{ form.id }}
+  {{ form.vorname }}
+  {{ form.nachname }}
+  <button type="button" class="entfernen" aria-label="Spieler entfernen">×</button>
+  <span class="versteckt">{{ form.DELETE }}</span>
+  {% if form.errors %}<ul class="fehler">{% for e in form.vorname.errors %}<li>Vorname: {{ e }}</li>{% endfor %}{% for e in form.nachname.errors %}<li>Nachname: {{ e }}</li>{% endfor %}</ul>{% endif %}
+</div>
