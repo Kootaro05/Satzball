@@ -58,7 +58,7 @@ class VerteilungTests(SimpleTestCase):
             self.assertLessEqual(len(slot), 2)
             self.assertEqual(len(teams), len(set(teams)))  # kein Team doppelt im Slot
 
-    def test_schiri_spielt_nicht_im_selben_slot_und_ist_bevorzugt_spielfrei(self):
+    def test_schiri_spielt_nicht_im_selben_slot_und_kommt_aus_der_anderen_gruppe(self):
         gruppen = [("A", list("ABCDE")), ("B", list("FGHIJ"))]
         slots = spielplan.slots_verteilen(spielplan.gruppenpartien(gruppen), 2)
         spielplan.schiris_zuteilen(slots, dict(gruppen))
@@ -68,7 +68,31 @@ class VerteilungTests(SimpleTestCase):
             self.assertTrue(all(schiris))
             self.assertFalse(spieler & set(schiris))
             self.assertEqual(len(schiris), len(set(schiris)))
-        self.assertTrue(all(p.schiri == p.spielfrei for slot in slots for p in slot))
+        gruppe_von = {t: g for g, teams in gruppen for t in teams}
+        self.assertTrue(all(gruppe_von[p.schiri] != p.gruppe for slot in slots for p in slot))
+        # 20 Spiele, 10 Teams: jedes pfeift zweimal
+        self.assertEqual(set(Counter(p.schiri for slot in slots for p in slot).values()), {2})
+
+    def test_schiri_aus_anderen_gruppen_bleibt_gerecht_verteilt(self):
+        gruppen = [("A", list("ABC")), ("B", list("DEF")), ("C", list("GHI"))]
+        slots = spielplan.schiris_zuteilen(spielplan.slots_verteilen(spielplan.gruppenpartien(gruppen), 2), dict(gruppen))
+        self.assertEqual(Counter(p.schiri for slot in slots for p in slot), Counter("ABCDEFGHI"))  # jedes Team einmal
+
+    def test_schiri_aus_der_eigenen_gruppe_wenn_die_andere_komplett_spielt(self):
+        gruppen = {"A": list("ABC"), "B": list("DE")}
+        slot = [spielplan.Partie("A", "B", "A", spielfrei="C"), spielplan.Partie("D", "E", "B")]
+        spielplan.schiris_zuteilen([slot], gruppen)
+        self.assertEqual(slot[0].schiri, "C")  # D und E spielen gerade: das spielfreie Team pfeift
+        self.assertIsNone(slot[1].schiri)  # A, B spielen, C pfeift schon – niemand frei
+
+    def test_jeder_gegen_jeden_pfeift_das_spielfreie_team(self):
+        gruppen = [("A", list("ABCDE"))]
+        slots = spielplan.schiris_zuteilen(spielplan.slots_verteilen(spielplan.gruppenpartien(gruppen), 2), dict(gruppen))
+        for slot in slots:
+            spielend = {t for p in slot for t in (p.a, p.b)}
+            for p in slot:
+                if p.spielfrei and p.spielfrei not in spielend:
+                    self.assertIn(p.spielfrei, [q.schiri for q in slot])
 
     def test_schiri_bei_gerader_gruppe(self):
         gruppen = [("A", list("ABCD"))]

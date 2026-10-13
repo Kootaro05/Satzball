@@ -56,7 +56,7 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
 - Tabellenwertung:
   - Satz-Modus: Siege, Satzdifferenz, Ballpunktdifferenz, direkter Vergleich
   - Punkte-Modus: Siege, Punktdifferenz, erzielte Punkte, direkter Vergleich
-- Paarungen per Kreismethode. Ungerade Teamzahl → "spielfrei"; das spielfreie Team pfeift.
+- Paarungen per Kreismethode. Ungerade Teamzahl → "spielfrei" (bei einer Gruppe pfeift das spielfreie Team).
   2 Felder, kein Team doppelt im selben Slot.
 - Nur bestätigte **und** bezahlte Teams kommen in den Spielplan (`Team.objects.im_spielplan()`).
 - Team-Status: Anmeldung → `angemeldet` (Platz frei) oder `warteliste` (voll).
@@ -95,7 +95,10 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
     ins Halbfinale; 4 Gruppen → Top 2 ins Viertelfinale. Danach Spiel um Platz 3 und Finale (ein Slot).
     K.-o.-Spiele haben Platzhalter; die Teams trägt die Orga im Admin ein.
   - Slots: Startzeit (`Turnier.beginn`) + Index × `slot_minuten`; Gruppen rundenweise verzahnt.
-  - Schiri: bevorzugt das spielfreie Team der Runde, sonst ein Team der Gruppe, das im Slot frei ist.
+  - Schiri (`schiris_zuteilen`): bei mehreren Gruppen bevorzugt ein freies Team aus einer anderen Gruppe (neutral);
+    aus der eigenen Gruppe nur, wenn es seltener gepfiffen hat oder sonst keins frei ist. Bei einer Gruppe das
+    spielfreie Team der Runde. Bei Gleichstand pfeift, wer später seltener frei ist (gleichmäßige Verteilung).
+    K.-o.-Spiele bekommen keinen automatischen Schiri.
     Nach jedem Verschieben werden die Schiris der offenen Spiele neu verteilt (`schiris_neu`).
   - Neu erzeugen nur, solange es keine Ergebnisse gibt; zieht die Veröffentlichung zurück.
 - Team löschen (im Admin) → `spielplan.umplanen`: Beendete Spiele bleiben (zählen aber nicht mehr in
