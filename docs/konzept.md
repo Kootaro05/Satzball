@@ -47,8 +47,8 @@ Das MVP deckt genau die vier Kernwünsche ab: Anmeldung, Spielerliste, Spielplan
 **Später, nur bei Bedarf**
 
 - ~~K.-o.-Phase automatisch aus Gruppentabellen befüllen~~ (umgesetzt)
-- Mehrere Felder/Zeitslots automatisch zuweisen
-- Export der Teamliste als CSV (Startgeld-Abrechnung)
+- ~~Mehrere Felder/Zeitslots automatisch zuweisen~~ (umgesetzt)
+- ~~Export der Teamliste als CSV (Startgeld-Abrechnung)~~ (umgesetzt)
 - ~~E-Mail-Erinnerung an Teams, die noch nicht bezahlt haben~~ (umgesetzt, per Knopf)
 
 **Bewusst nicht:** Online-Bezahlung, Nutzerkonten für Spieler, Live-Ticker, Chat, Native App.
