@@ -112,21 +112,36 @@ def slots_verteilen(partien, felder):
 
 
 def schiris_zuteilen(slots, gruppen_teams):
-    """Pro Spiel ein Team, das im Slot weder spielt noch schon pfeift. Bevorzugt das spielfreie
-    Team der Runde, sonst ein Team der Gruppe mit den wenigsten Einsätzen, sonst irgendeins."""
+    """Pro Spiel ein Team, das im Slot weder spielt noch schon pfeift.
+    Mehrere Gruppen: bevorzugt ein Team aus einer anderen Gruppe (neutral, hat nichts vom Ergebnis);
+    ein Team der eigenen Gruppe nur, wenn es seltener gepfiffen hat oder sonst niemand frei ist.
+    Eine Gruppe (Jeder gegen jeden): das spielfreie Team der Runde, sonst das mit den wenigsten Einsätzen."""
     einsaetze = Counter()
+    # Wie oft ein Team ab hier noch spielfrei ist: Wer später selten Zeit hat, pfeift bei Gleichstand zuerst.
+    noch_frei = Counter()
     alle = [t for teams in gruppen_teams.values() for t in teams]
     for slot in slots:
+        spielend = {t for p in slot for t in (p.a, p.b)}
+        noch_frei.update(t for t in alle if t not in spielend)
+    for slot in slots:
+        spielend = {t for p in slot for t in (p.a, p.b)}
+        noch_frei.subtract(t for t in alle if t not in spielend)
         beschaeftigt = {t for p in slot for t in (p.a, p.b)} | {p.schiri for p in slot if p.fest and p.schiri}
         for p in slot:
             if p.fest:
+                if p.schiri:  # beendetes Spiel: der Einsatz zählt, sonst pfeift dasselbe Team gleich wieder
+                    einsaetze[p.schiri] += 1
                 continue
-            frei = [t for t in gruppen_teams.get(p.gruppe, []) if t not in beschaeftigt]
-            frei = frei or [t for t in alle if t not in beschaeftigt]
-            if not frei:
+            eigene = [t for t in gruppen_teams.get(p.gruppe, []) if t not in beschaeftigt]
+            andere = [t for t in alle if t not in beschaeftigt and t not in eigene]
+            if andere:
+                # Andere Gruppe zuerst, aber nicht auf Kosten der Gerechtigkeit: wer seltener gepfiffen hat, ist dran.
+                p.schiri = min(andere + eigene, key=lambda t: (einsaetze[t], t in eigene, noch_frei[t]))
+            elif eigene:
+                p.schiri = p.spielfrei if p.spielfrei in eigene else min(eigene, key=lambda t: (einsaetze[t], noch_frei[t]))
+            else:
                 p.schiri = None
                 continue
-            p.schiri = p.spielfrei if p.spielfrei in frei else min(frei, key=lambda t: einsaetze[t])
             einsaetze[p.schiri] += 1
             beschaeftigt.add(p.schiri)
     return slots
