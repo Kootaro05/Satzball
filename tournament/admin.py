@@ -1,8 +1,10 @@
+import csv
 from collections import defaultdict
 
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count
+from django.http import HttpResponse
 from django.template.response import TemplateResponse
 from django.utils import timezone
 from django.shortcuts import get_object_or_404, redirect
@@ -117,6 +119,12 @@ class ZahlungFilter(admin.SimpleListFilter):
         return queryset
 
 
+def _csv_zelle(wert):
+    """Excel führt Zellen, die mit = + - @ beginnen, als Formel aus – Teamnamen kommen von außen, also entschärfen."""
+    text = str(wert)
+    return f"'{text}" if text[:1] in ("=", "+", "-", "@", "\t", "\r") else text
+
+
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
     list_display = [
@@ -127,7 +135,7 @@ class TeamAdmin(admin.ModelAdmin):
     list_filter = ["turnier", "status", ZahlungFilter, "zahlungsart"]
     list_editable = ["bezahlt", "zahlungsart"]
     show_facets = admin.ShowFacets.ALWAYS
-    actions = ["nachruecken"]
+    actions = ["nachruecken", "als_csv"]
     search_fields = ["name", "kapitaen_name", "kapitaen_email", "spieler__vorname", "spieler__nachname"]
     list_select_related = ["turnier", "gruppe"]
     readonly_fields = ["bearbeitungslink"]
@@ -144,6 +152,24 @@ class TeamAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(_anzahl_spieler=Count("spieler", distinct=True))
+
+    @admin.action(description="Als CSV exportieren (Abrechnung)", permissions=["view"])
+    def als_csv(self, request, queryset):
+        """Gewählte Teams als CSV für Excel: Semikolon, UTF-8 mit BOM, deutsche Zahlen und Daten."""
+        antwort = HttpResponse(content_type="text/csv; charset=utf-8")
+        antwort["Content-Disposition"] = f'attachment; filename="teams-{timezone.localdate():%Y-%m-%d}.csv"'
+        antwort.write("\ufeff")  # BOM, sonst zeigt Excel die Umlaute falsch
+        schreiber = csv.writer(antwort, delimiter=";")
+        schreiber.writerow(["Turnier", "Team", "Kapitän", "E-Mail", "Status", "Spieler", "Startgebühr (€)",
+                            "Bezahlt", "Bezahlt am", "Zahlungsart", "Notiz"])
+        for team in queryset.order_by("turnier__datum", "turnier", *Team.REIHENFOLGE):
+            schreiber.writerow([_csv_zelle(wert) for wert in [
+                team.turnier.name, team.name, team.kapitaen_name, team.kapitaen_email, team.get_status_display(),
+                team._anzahl_spieler, f"{team.turnier.startgebuehr_eur:.2f}".replace(".", ","),
+                "ja" if team.bezahlt else "nein", team.bezahlt_am.strftime("%d.%m.%Y") if team.bezahlt_am else "",
+                team.get_zahlungsart_display(), team.notiz,
+            ]])
+        return antwort
 
     def changelist_view(self, request, extra_context=None):
         # Kennzahlen für das gefilterte Turnier, sonst für das aktuelle (Screen 06).

@@ -75,6 +75,8 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
 - Zahlungs-Tracking im Admin (Teamliste): Haken "bezahlt" und Zahlungsart direkt in der Liste,
   Kennzahlen aus `Turnier.zahlungsuebersicht()` (erwartet = Gebühr × Teams mit Startplatz),
   Filter "Unbezahlt (mit Startplatz)", Aktion "Von der Warteliste nachrücken".
+  Aktion "Als CSV exportieren" (Abrechnung, folgt den Filtern): Semikolon + BOM für Excel; Zellen, die mit
+  = + - @ beginnen, bekommen ein `'` davor (sonst führt Excel Teamnamen aus dem Formular als Formel aus).
 - Sichtbarkeit: Besucher sehen nur Turniere mit `Turnier.oeffentlich` (Standard aus, die Orga schaltet frei).
   Öffentliche Seiten nutzen `Turnier.aktuelles(nur_oeffentliche=True)`, Orga/Admin sehen alle.
 - Turnier-Wahl (öffentlich): `views.gewaehltes_turnier(request)` – `?turnier=<id>` (in der Session gemerkt),
