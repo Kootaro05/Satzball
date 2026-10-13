@@ -14,6 +14,17 @@
     {% if weitere_turniere %}<a class="klein" href="{% url 'turniere' %}">Andere Turniere ansehen →</a>{% endif %}
   </div>
 
+  {% if endstand %}
+    <section class="stapel stapel--eng" aria-label="Endstand">
+      <h2 class="zwischen zwischen--l">Endstand</h2>
+      <div class="liste">
+        {% for platz, team in endstand %}
+          <div class="liste__zeile"><span class="liste__name">{{ platz }}. {{ team.name }}</span>{% if platz == 1 %}<span class="badge badge--bestaetigt">Sieger</span>{% endif %}</div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
   <div class="kacheln">
     <div class="kachel">
       <span class="kachel__label">Datum</span>

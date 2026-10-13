@@ -102,3 +102,33 @@ def gruppentabellen(turnier):
                            turnier.zaehlmodus))
         for gruppe in turnier.gruppen.order_by("name")
     ]
+
+
+def endstand(turnier):
+    """Plätze 1–3 als [(platz, team)], sobald sie feststehen, sonst [].
+
+    Gruppen + K.-o.: Finale (1. und 2.) und Spiel um Platz 3, jeweils sobald beendet.
+    Jeder gegen jeden: die Tabelle, sobald alle Spiele beendet sind. Echter Gleichstand teilt sich den Platz.
+    """
+    spiele = list(turnier.spiele.select_related("team_a", "team_b", "turnier"))
+    if turnier.modus == Turnier.Modus.GRUPPEN_KO:
+        finale = next((s for s in spiele if s.phase == Spiel.Phase.FINALE), None)
+        if not finale or not finale.sieger:
+            return []
+        zweiter = finale.team_b if finale.sieger == finale.team_a else finale.team_a
+        plaetze = [(1, finale.sieger), (2, zweiter)]
+        platz_3 = next((s for s in spiele if s.phase == Spiel.Phase.PLATZ_3), None)
+        if platz_3 and platz_3.sieger:
+            plaetze.append((3, platz_3.sieger))
+        return plaetze
+
+    if not spiele or any(s.status != Spiel.Status.BEENDET for s in spiele):
+        return []
+    plaetze = []
+    for _, tabelle in gruppentabellen(turnier):
+        platz_von = {z.team: z.platz for z in tabelle}
+        for zeile in tabelle:
+            platz = min(platz_von[t] for t in zeile.gleichstand or (zeile.team,))
+            if platz <= 3:
+                plaetze.append((platz, zeile.team))
+    return plaetze
