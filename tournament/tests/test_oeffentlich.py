@@ -1,7 +1,7 @@
 from datetime import datetime, time, timedelta
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -111,3 +111,17 @@ class OeffentlicherSpielplanTests(TestCase):
             r = self.client.get(reverse(name))
             self.assertContains(r, f'<a href="{reverse(name)}" aria-current="page">', html=False)
             self.assertContains(r, 'aria-current="page"', count=1)
+
+
+class BrandingTests(TestCase):
+    def test_satzball_statt_hochschulname_und_quellcode_link(self):
+        for name in ["startseite", "teamliste", "spielplan", "tabelle", "datenschutz", "anmelden"]:
+            r = self.client.get(reverse(name))
+            self.assertNotContains(r, "DHSN")
+            self.assertContains(r, "Satzball")
+            self.assertContains(r, 'href="https://github.com/Kootaro05/Satzball"')
+            self.assertContains(r, "img/logo.svg")
+
+    @override_settings(QUELLCODE_URL="https://git.example-uni.de/satzball")
+    def test_quellcode_url_einstellbar(self):
+        self.assertContains(self.client.get(reverse("startseite")), 'href="https://git.example-uni.de/satzball"')

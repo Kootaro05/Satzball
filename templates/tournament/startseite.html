@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block inhalt %}
 {% if not turnier %}
-  <h1 class="titel">Volleyball an der DHSN</h1>
+  <h1 class="titel">Satzball</h1>
   <p class="leise">Gerade ist kein Turnier geplant. Schau bald wieder vorbei.</p>
 {% else %}
   <div class="stapel">
@@ -11,6 +11,7 @@
       <span class="badge badge--neutral badge--gross">Anmeldung geschlossen</span>
     {% endif %}
     <h1 class="titel">{{ turnier.name }}</h1>
+    {% if weitere_turniere %}<a class="klein" href="{% url 'turniere' %}">Andere Turniere ansehen →</a>{% endif %}
   </div>
 
   <div class="kacheln">
@@ -63,7 +64,7 @@
         {% endfor %}
       </div>
     {% else %}
-      <p class="leise">Noch keine Teams. Seid die Ersten!</p>
+      <p class="leise">Noch keine Teams.{% if turnier.anmeldung_moeglich %} Seid die Ersten!{% endif %}</p>
     {% endif %}
   </div>
 {% endif %}

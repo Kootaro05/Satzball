@@ -1,0 +1,164 @@
+/* Satzball-Look für den Django Admin: gleiche Struktur, Farben und Schrift aus docs/design.html.
+   Überschreibt nur Djangos CSS-Variablen und ein paar Rundungen/Abstände. */
+
+@font-face { font-family: "Barlow"; font-weight: 400; font-display: swap; src: url("../fonts/barlow-400.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-weight: 500; font-display: swap; src: url("../fonts/barlow-500.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-weight: 600; font-display: swap; src: url("../fonts/barlow-600.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-weight: 700; font-display: swap; src: url("../fonts/barlow-700.woff2") format("woff2"); }
+@font-face { font-family: "Barlow Condensed"; font-weight: 800; font-style: italic; font-display: swap; src: url("../fonts/barlow-condensed-800-italic.woff2") format("woff2"); }
+
+html[data-theme="light"],
+:root {
+    --primary: #2867e4;
+    --secondary: #15171c;
+    --accent: #ffffff;
+    --primary-fg: #ffffff;
+
+    --body-fg: #15171c;
+    --body-bg: #ffffff;
+    --body-quiet-color: #5c626d;
+    --body-medium-color: #33373f;
+    --body-loud-color: #000000;
+
+    --header-color: #a0a6b0;
+    --header-branding-color: #ffffff;
+    --header-bg: #15171c;
+    --header-link-color: #f1f2f4;
+
+    --breadcrumbs-fg: #5c626d;
+    --breadcrumbs-link-fg: #2867e4;
+    --breadcrumbs-bg: #f0f0ed;
+
+    --link-fg: #2867e4;
+    --link-hover-color: #1a4fb8;
+    --link-selected-fg: #15171c;
+
+    --hairline-color: #e6e6e3;
+    --border-color: #d4d5d1;
+
+    --message-success-bg: #e3f5e8;
+    --message-warning-bg: #fdf6d8;
+    --message-error-bg: #fdecea;
+
+    --darkened-bg: #f6f6f4;
+    --selected-bg: #e9e9e6;
+    --selected-row: #eaf0fd;
+
+    --button-bg: #2867e4;
+    --button-hover-bg: #1f55c7;
+    --default-button-bg: #15171c;
+    --default-button-hover-bg: #33373f;
+    --close-button-bg: #8a909a;
+    --close-button-hover-bg: #5c626d;
+
+    --font-family-primary: "Barlow", system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primary: #6fa2ff;
+        --primary-fg: #0c0e12;
+        --body-fg: #f1f2f4;
+        --body-bg: #111317;
+        --body-quiet-color: #a0a6b0;
+        --body-medium-color: #d6d8dc;
+        --body-loud-color: #ffffff;
+        --header-bg: #08090b;
+        --breadcrumbs-fg: #a0a6b0;
+        --breadcrumbs-link-fg: #6fa2ff;
+        --breadcrumbs-bg: #1a1d22;
+        --link-fg: #6fa2ff;
+        --link-hover-color: #9cbfff;
+        --link-selected-fg: #f1f2f4;
+        --hairline-color: #2c3038;
+        --border-color: #3a3f48;
+        --message-success-bg: #12351f;
+        --message-warning-bg: #3a3112;
+        --message-error-bg: #3d1717;
+        --darkened-bg: #1a1d22;
+        --selected-bg: #23262d;
+        --selected-row: #1d2a44;
+        --button-fg: #0c0e12;
+        --button-bg: #6fa2ff;
+        --button-hover-bg: #9cbfff;
+        --default-button-bg: #f1f2f4;
+        --default-button-hover-bg: #d6d8dc;
+        --close-button-bg: #3a3f48;
+        --close-button-hover-bg: #5c626d;
+    }
+}
+
+html[data-theme="dark"] {
+    --primary: #6fa2ff;
+    --primary-fg: #0c0e12;
+    --body-fg: #f1f2f4;
+    --body-bg: #111317;
+    --body-quiet-color: #a0a6b0;
+    --body-medium-color: #d6d8dc;
+    --body-loud-color: #ffffff;
+    --header-bg: #08090b;
+    --breadcrumbs-fg: #a0a6b0;
+    --breadcrumbs-link-fg: #6fa2ff;
+    --breadcrumbs-bg: #1a1d22;
+    --link-fg: #6fa2ff;
+    --link-hover-color: #9cbfff;
+    --link-selected-fg: #f1f2f4;
+    --hairline-color: #2c3038;
+    --border-color: #3a3f48;
+    --message-success-bg: #12351f;
+    --message-warning-bg: #3a3112;
+    --message-error-bg: #3d1717;
+    --darkened-bg: #1a1d22;
+    --selected-bg: #23262d;
+    --selected-row: #1d2a44;
+    --button-fg: #0c0e12;
+    --button-bg: #6fa2ff;
+    --button-hover-bg: #9cbfff;
+    --default-button-bg: #f1f2f4;
+    --default-button-hover-bg: #d6d8dc;
+    --close-button-bg: #3a3f48;
+    --close-button-hover-bg: #5c626d;
+}
+
+/* Kopf */
+#header { padding: 14px 32px; }
+#site-name { font: italic 800 24px/1 "Barlow Condensed", "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .01em; }
+div.breadcrumbs { padding: 10px 32px; border-bottom: 1px solid var(--hairline-color); }
+
+/* Karten statt harter Balken */
+.module { border: 1px solid var(--hairline-color); border-radius: 12px; background: var(--body-bg); }
+#content-main > .module, .dashboard .module, #recent-actions-module { overflow: hidden; }
+.module h2, .module caption, .inline-group h2 {
+    background: var(--darkened-bg); color: var(--body-fg); font-weight: 600; font-size: 13px;
+    letter-spacing: .04em; padding: 10px 14px; border-bottom: 1px solid var(--hairline-color);
+}
+.module > h2:first-child, .module caption { border-radius: 12px 12px 0 0; }
+.module h2 a, .module caption a.section { color: var(--body-fg); }
+fieldset.module { padding-bottom: 6px; }
+/* "html …" macht die Regel stärker als Djangos forms.css, die auf Bearbeitungsseiten nach dieser Datei lädt. */
+html fieldset .fieldset-heading, html fieldset .inline-heading, html .inline-group h2 {
+    background: var(--darkened-bg); color: var(--body-fg); border-radius: 12px 12px 0 0;
+    border-bottom: 1px solid var(--hairline-color); font-size: 13px; letter-spacing: .04em; padding: 10px 14px;
+}
+
+/* Formularfelder und Knöpfe */
+input[type=text], input[type=password], input[type=email], input[type=url], input[type=number],
+input[type=tel], input[type=date], input[type=time], textarea, select, .vTextField {
+    border: 1px solid var(--border-color); border-radius: 8px; padding: 7px 10px;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--primary); outline: 2px solid color-mix(in srgb, var(--primary) 25%, transparent); outline-offset: 0; }
+.button, input[type=submit], input[type=button], .submit-row input, a.button { border-radius: 8px; padding: 9px 16px; font-weight: 600; }
+.submit-row { border: 1px solid var(--hairline-color); border-radius: 12px; background: var(--darkened-bg); }
+.object-tools a:link, .object-tools a:visited { border-radius: 99px; padding: 6px 14px; }
+
+/* Änderungslisten */
+#changelist-filter { border: 1px solid var(--hairline-color); border-radius: 12px; overflow: hidden; }
+#changelist-filter h2 { border-radius: 0; }
+#changelist .actions { border-radius: 8px; }
+#result_list thead th { background: var(--darkened-bg); }
+#result_list tbody tr:hover td, #result_list tbody tr:hover th { background: var(--darkened-bg); }
+#changelist-search input[type=text] { padding: 6px 10px; }
+
+/* Turnier: Felder, die im gewählten Zählmodus nicht gelten */
+.satzball-aus { opacity: .45; }
+.satzball-aus input, .satzball-aus select { pointer-events: none; }

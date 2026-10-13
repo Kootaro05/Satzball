@@ -8,6 +8,7 @@
 </header>
 {% endblock %}
 {% block nav %}{% endblock %}
+{% block banner %}{% endblock %}
 {% block inhalt %}
 <div class="stapel stapel--eng">
   <span class="leise">{% if spiel.feld %}Feld {{ spiel.feld }} · {% endif %}{% if spiel.uhrzeit %}{{ spiel.uhrzeit|time:"G:i" }} · {% endif %}{{ spiel.titel }}</span>

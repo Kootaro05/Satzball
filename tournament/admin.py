@@ -31,6 +31,9 @@ class TurnierAdmin(admin.ModelAdmin):
     inlines = [GruppeInline]
     actions = ["teamdaten_loeschen"]
     readonly_fields = ["teamdaten_geloescht_am"]
+
+    class Media:
+        js = ["js/admin_turnier.js"]  # Satz-Felder im Punkte-Modus ausgrauen
     fieldsets = [
         (None, {"fields": ["name", "datum", "beginn", "ort", "startgebuehr_eur", "zahlungsinfo"]}),
         ("Anmeldung", {"fields": ["anmeldung_offen", "meldeschluss", "max_teams", "min_spieler", "max_spieler"]}),

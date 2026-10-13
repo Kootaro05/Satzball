@@ -1,6 +1,6 @@
 # 🏐 Satzball
 
-**Turnierplanung für interne Volleyball-Turniere an der DHSN Leipzig – ohne Excel-Liste und WhatsApp-Chaos.**
+**Turnierplanung für interne Volleyball-Turniere an Hochschulen – ohne Excel-Liste und WhatsApp-Chaos.**
 
 Teams melden sich online an, die Orga sieht auf einen Blick, wer die Startgebühr bezahlt hat, und am Spieltag haben alle Spielplan, Ergebnisse und Tabelle auf dem Handy.
 
@@ -101,6 +101,13 @@ Gespeichert wird nur das Nötigste: Spielernamen und eine E-Mail-Adresse pro Tea
 - [ ] Öffentliche Seiten (Spielplan, Tabelle)
 - [ ] Probelauf, dann erstes echtes Turnier 🎉
 
+## 📜 Lizenz
+
+Satzball ist Open Source unter der [GNU Affero General Public License v3.0](LICENSE).
+Andere Hochschulen dürfen Satzball nutzen und anpassen. Wer eine veränderte Version als Webseite
+betreibt, muss den Nutzern den geänderten Quellcode zugänglich machen – dafür gibt es den Link
+„Quellcode“ in der Fußzeile (`SATZBALL_QUELLCODE_URL`).
+
 ---
 
-Gebaut für die Volleyball-Community der DHSN Leipzig.
+Entstanden für die Volleyball-Community der DHSN Leipzig.

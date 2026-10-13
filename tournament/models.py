@@ -84,6 +84,10 @@ class Turnier(models.Model):
         return cls.objects.filter(datum__gte=heute).order_by("datum").first() or cls.objects.first()
 
     @property
+    def vorbei(self):
+        return self.datum < timezone.localdate()
+
+    @property
     def meldeschluss_vorbei(self):
         return timezone.now() >= self.meldeschluss
 

@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block titel %}{% if turnier %}{{ turnier.name }} · {% endif %}DHSN Volleyball{% endblock %}</title>
+  <title>{% block titel %}{% if turnier %}{{ turnier.name }} · {% endif %}Satzball{% endblock %}</title>
+  <link rel="icon" href="{% static 'img/logo.svg' %}" type="image/svg+xml">
   <link rel="preload" href="{% static 'fonts/barlow-400.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'css/satzball.css' %}">
 </head>
@@ -11,12 +12,22 @@
   <div class="app{% block app_klasse %}{% endblock %}">
     {% block kopf %}
     <header class="kopf">
-      <a class="marke" href="{% url 'startseite' %}">DHSN Volleyball</a>
+      <a class="marke" href="{% url 'startseite' %}"><img src="{% static 'img/logo.svg' %}" alt="" width="28" height="28">Satzball</a>
       {% if user.is_staff %}<a class="kopf__link" href="{% url 'orga_spielplan' %}">Orga</a>{% else %}<a class="kopf__link" href="{% url 'admin:index' %}">Orga-Login</a>{% endif %}
     </header>
     {% endblock %}
 
     <main class="inhalt">
+      {% block banner %}
+      {% with akt=aktuelles_turnier %}
+      {% if turnier and akt and turnier.pk != akt.pk %}
+        <div class="hinweis hinweis--warnung">
+          Du siehst {% if turnier.vorbei %}das vergangene Turnier{% else %}das Turnier{% endif %} <b>{{ turnier.name }}</b>.
+          <a href="{% url 'startseite' %}?turnier={{ akt.pk }}">Zum aktuellen Turnier →</a>
+        </div>
+      {% endif %}
+      {% endwith %}
+      {% endblock %}
       {% if messages %}
       <ul class="meldungen">
         {% for m in messages %}<li class="hinweis">{{ m }}</li>{% endfor %}
@@ -24,6 +35,11 @@
       {% endif %}
       {% block inhalt %}{% endblock %}
     </main>
+
+    <footer class="fuss">
+      <a href="{% url 'datenschutz' %}">Datenschutz</a> ·
+      Satzball ist Open Source (AGPL-3.0) · <a href="{{ quellcode_url }}" rel="noopener">Quellcode</a>
+    </footer>
 
     {% block nav %}
     {% with seite=request.resolver_match.url_name %}
