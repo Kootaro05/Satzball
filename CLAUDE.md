@@ -110,6 +110,9 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
   Offene K.-o.-Spiele folgen Korrekturen, beendete bleiben. Manuell setzen = Platzhalter leeren.
   Echter Gleichstand um einen K.-o.-Platz wird nie alphabetisch vergeben: Platz bleibt leer,
   `ko.offene_entscheidungen` → Hinweis „Entscheidungssatz spielen“ (Meldung + Kasten auf der Orga-Spielplanseite).
+- Endstand auf der Startseite (`tabelle.endstand`, nur bei veröffentlichtem Spielplan): Gruppen + K.-o. aus Finale
+  und Spiel um Platz 3, sobald beendet; Jeder gegen jeden aus der Tabelle, sobald alle Spiele beendet sind
+  (echter Gleichstand teilt sich den Platz).
 - Öffentlich `/spielplan/` (Screen 05): Spiele nach Uhrzeit und Feld, Ergebnisse. Gruppentabellen auf
   eigener Seite `/tabelle/` (Abweichung vom Design, damit der Menüpunkt aktiv markiert wird).
   Untere Navigation mit Inline-SVG-Symbolen. "Läuft" = erster Slot mit offenen Spielen, sobald seine Startzeit am Spieltag erreicht ist

@@ -16,7 +16,7 @@ from . import spielplan as plan
 from . import warteliste
 from .forms import AnmeldeForm, spieler_formset
 from .models import Spiel, Spieler, Team, Turnier
-from .tabelle import gruppentabellen
+from .tabelle import endstand, gruppentabellen
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +60,7 @@ def startseite(request):
         "weitere_turniere": turnier and Turnier.objects.filter(oeffentlich=True).exclude(pk=turnier.pk).exists(),
         "teams": teams,
         "plaetze": [i < turnier.belegte_plaetze for i in range(turnier.max_teams)] if turnier else [],
+        "endstand": endstand(turnier) if turnier and turnier.spielplan_veroeffentlicht else [],
     })
 
 
