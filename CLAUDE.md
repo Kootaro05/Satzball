@@ -38,6 +38,7 @@ Umgebungsvariablen (alle optional): `DJANGO_DEBUG` (lokal Standard `1`, im Conta
 `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS`, `DEFAULT_FROM_EMAIL`
 (ohne `EMAIL_HOST` werden Mails nur in die Konsole/das Log geschrieben).
 `DJANGO_HTTPS=1` (nur auf dem Server hinter nginx: vertraut `X-Forwarded-Proto`, Cookies nur über HTTPS).
+`SATZBALL_VERANTWORTLICHER` (Datenschutzerklärung, Zeilen mit `|` getrennt – Betreiberdaten nicht im Code).
 Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/satzball.env.example`.
 
 ## Fachliche Regeln
@@ -93,6 +94,10 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
   der Tabelle), offene Spiele der betroffenen Gruppe werden ohne das Team neu gepaart, alle offenen
   Spiele rücken ab dem nächsten freien Slot lückenlos auf, K.-o. danach.
 - Tabelle: `tournament/tabelle.py` (`berechnen`, `gruppentabellen`), zählt nur beendete Gruppenspiele.
+  `Zeile.gleichstand` markiert, wenn auch der direkte Vergleich nicht trennt (Reihenfolge dann alphabetisch).
+- K.-o.-Runde füllt sich automatisch (`tournament/ko.py`, nach jedem gespeicherten Ergebnis in Orga-Seite
+  und Admin): Platzhalter wie "1. Gruppe A", "Bester Gruppenzweiter" (Schnitt pro Spiel), "Sieger HF 1".
+  Offene K.-o.-Spiele folgen Korrekturen, beendete bleiben. Manuell setzen = Platzhalter leeren.
 - Öffentlich `/spielplan/` (Screen 05): Spiele nach Uhrzeit und Feld, Ergebnisse. Gruppentabellen auf
   eigener Seite `/tabelle/` (Abweichung vom Design, damit der Menüpunkt aktiv markiert wird).
   Untere Navigation mit Inline-SVG-Symbolen. "Läuft" = erster Slot mit offenen Spielen, sobald seine Startzeit am Spieltag erreicht ist

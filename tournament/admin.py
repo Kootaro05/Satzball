@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.urls import reverse
 from django.utils.html import format_html
 
-from . import spielplan
+from . import ko, spielplan
 from .models import Gruppe, Spiel, Spieler, Team, Turnier
 
 admin.site.site_header = "Satzball – Orga"
@@ -188,6 +188,11 @@ class GruppeAdmin(admin.ModelAdmin):
 
 @admin.register(Spiel)
 class SpielAdmin(admin.ModelAdmin):
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        for meldung in ko.aktualisieren(obj.turnier):  # K.-o.-Runde nach Ergebnis-Änderungen befüllen
+            self.message_user(request, meldung, messages.INFO)
+
     list_display = ["__str__", "turnier", "phase", "gruppe", "runde", "uhrzeit", "feld", "ergebnis", "schiri_team", "status"]
     list_filter = ["turnier", "phase", "status", "gruppe", "feld"]
     list_select_related = ["turnier", "gruppe", "team_a", "team_b", "schiri_team"]

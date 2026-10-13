@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from . import spielplan
+from . import ko, spielplan
 from .models import Spiel, Team, Turnier
 from .tabelle import gruppentabellen
 
@@ -118,6 +118,8 @@ def ergebnis_seite(request, pk):
             spiel.full_clean()
             spiel.save()
             messages.success(request, "Gespeichert.")
+            for meldung in ko.aktualisieren(turnier):
+                messages.info(request, meldung)
             return redirect("orga_ergebnis", pk=spiel.pk)
         except ValidationError as e:
             spiel.status = Spiel.Status.GEPLANT

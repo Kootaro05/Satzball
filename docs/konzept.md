@@ -46,7 +46,7 @@ Das MVP deckt genau die vier Kernwünsche ab: Anmeldung, Spielerliste, Spielplan
 
 **Später, nur bei Bedarf**
 
-- K.-o.-Phase automatisch aus Gruppentabellen befüllen
+- ~~K.-o.-Phase automatisch aus Gruppentabellen befüllen~~ (umgesetzt)
 - Mehrere Felder/Zeitslots automatisch zuweisen
 - Export der Teamliste als CSV (Startgeld-Abrechnung)
 - E-Mail-Erinnerung an Teams, die noch nicht bezahlt haben
@@ -187,6 +187,8 @@ So wenig Daten wie möglich: Name der Spieler, eine E-Mail pro Team. Keine Telef
 | Sichtbarkeit | Orga schaltet jedes Turnier ausdrücklich frei | Feld „öffentlich sichtbar“ (Standard aus); Entwürfe und Testturniere bleiben unsichtbar |
 | Lizenz | Open Source unter AGPL-3.0, © 2026 TetraMedia | Fußzeile verlinkt den Quellcode; App ohne hochschulspezifische Texte |
 | Punkte-Modus | Ohne Zielpunktzahl, mehr Punkte gewinnt | Ersetzt „ein Satz auf X Punkte“; einen Satz bis 25 stellt man als Satz-Modus Best of 1 ein. Kein Unentschieden bleibt |
+| K.-o.-Runde befüllen | Vollautomatisch nach jedem Ergebnis | Aus „Später“ vorgezogen; bester Gruppenzweiter nach Schnitt pro Spiel; Warnung bei echtem Gleichstand |
+| Datenschutz | Datenschutzerklärung vom Betreiber, kein separates Impressum (Hobbyseite) | Verantwortlicher per `SATZBALL_VERANTWORTLICHER`, Rest des Textes in der App |
 
 **Noch offen:**
 

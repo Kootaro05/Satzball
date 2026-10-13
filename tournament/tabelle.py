@@ -21,6 +21,7 @@ class Zeile:
     punkte_plus: int = 0
     punkte_minus: int = 0
     platz: int = 0
+    gleichstand: bool = False  # auch der direkte Vergleich trennt nicht; Reihenfolge nur nach Name
 
     @property
     def sd(self):
@@ -60,7 +61,11 @@ def _direkter_vergleich(zeilen, spiele, satz_modus):
     for spiel in spiele:
         if spiel.team_a in teams and spiel.team_b in teams:
             _eintragen(mini, spiel, satz_modus)
-    return sorted(zeilen, key=lambda z: (*(-k for k in _schluessel(mini[z.team], satz_modus)), str(z.team)))
+    sortiert = sorted(zeilen, key=lambda z: (*(-k for k in _schluessel(mini[z.team], satz_modus)), str(z.team)))
+    for vorher, nachher in zip(sortiert, sortiert[1:]):
+        if _schluessel(mini[vorher.team], satz_modus) == _schluessel(mini[nachher.team], satz_modus):
+            vorher.gleichstand = nachher.gleichstand = True
+    return sortiert
 
 
 def berechnen(teams, spiele, zaehlmodus):
