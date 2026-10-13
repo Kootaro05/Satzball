@@ -160,8 +160,29 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); outlin
 /* Login: Knopfleiste ohne Karte */
 .login .submit-row { border: 0; background: none; padding: 1em 0 0; }
 
-/* Seitenleiste: Ein-/Ausklappen oben statt mittig am Rand */
-.toggle-nav-sidebar { align-items: flex-start; padding-top: 14px; }
+/* Seitenleiste: ohne harte Linien, Suchfeld und Karten mit Abstand, runder Knopf zum Ein-/Ausklappen.
+   Django rechnet die Inhaltsbreite mit der Knopfbreite (23 px) – hier auf 44 px (Knopf + Abstände) angepasst. */
+.toggle-nav-sidebar {
+    flex: 0 0 32px; width: 32px; height: 32px; align-self: flex-start; top: 14px;
+    margin: 14px 6px 0; border: 1px solid var(--hairline-color); border-radius: 50%;
+    background-color: var(--darkened-bg); font-size: 18px; line-height: 1;
+}
+.toggle-nav-sidebar:hover, .toggle-nav-sidebar:focus { background-color: var(--selected-bg); }
+.main > #nav-sidebar + .content { max-width: calc(100% - 44px); }
+.main.shifted > #nav-sidebar + .content { max-width: calc(100% - 275px - 44px); }
+
+#nav-sidebar { border: 0; background: transparent; padding: 14px 16px 24px 0; }
+#nav-filter {
+    margin: 0 0 14px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px;
+    background-color: var(--body-bg); font-size: 14px;
+}
+#nav-filter:focus { border-color: var(--primary); outline: 2px solid color-mix(in srgb, var(--primary) 25%, transparent); }
+#nav-sidebar .module { overflow: hidden; margin-bottom: 14px; }
+#nav-sidebar .module th, #nav-sidebar .module td { padding: 8px 14px; border-bottom: 1px solid var(--hairline-color); }
+#nav-sidebar .module tr:last-child th, #nav-sidebar .module tr:last-child td { border-bottom: 0; }
+#nav-sidebar .module td { padding-left: 0; }
+#nav-sidebar .current-model th, #nav-sidebar .current-model td { background: var(--selected-row); }
+#nav-sidebar .current-model th a { font-weight: 600; }
 
 /* Rechte Spalte (z. B. "Neueste Aktionen") wie die übrigen Kästen */
 #content-related { background: none; }
