@@ -5,7 +5,7 @@ from io import StringIO
 from pathlib import Path
 
 from django.contrib.auth.models import User
-from django.core.management import call_command
+from django.core.management import CommandError, call_command
 from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -122,6 +122,14 @@ class BefehleTests(TestCase):
         self.assertFalse(t.teams.exclude(kapitaen_email__endswith="@example.invalid").exists())
         self.assertIn("Spielplan erzeugt", ausgabe.getvalue())
 
+
+
+    def test_testturnier_mit_zu_wenigen_teams(self):
+        with self.assertRaisesMessage(CommandError, "mindestens 6"):
+            call_command("testturnier", "--teams", "4", "--spielplan", stdout=StringIO())
+        self.assertFalse(Turnier.objects.exists())  # nichts Halbes übrig
+        call_command("testturnier", "--teams", "4", stdout=StringIO())  # ohne Spielplan geht es
+        self.assertEqual(Turnier.objects.count(), 1)
 
 
 class SicherungTests(TransactionTestCase):

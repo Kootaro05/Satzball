@@ -54,7 +54,11 @@ class Command(BaseCommand):
 
         self.stdout.write(f"Turnier „{turnier}“ (id {turnier.pk}) mit {teams} bezahlten und 2 offenen Teams angelegt.")
         if mit_spielplan:
-            spielplan.erzeugen(turnier)
+            try:
+                spielplan.erzeugen(turnier)
+            except spielplan.SpielplanFehler as fehler:
+                # CommandError rollt die Transaktion zurück – es bleibt kein halbes Testturnier stehen.
+                raise CommandError(f"Spielplan nicht möglich: {fehler} Mehr Teams angeben (--teams).") from fehler
             turnier.spielplan_veroeffentlicht = True
             turnier.save(update_fields=["spielplan_veroeffentlicht"])
             self.stdout.write(f"Spielplan erzeugt und veröffentlicht: {turnier.spiele.count()} Spiele ab {beginn:%H:%M}.")
