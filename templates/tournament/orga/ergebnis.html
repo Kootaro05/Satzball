@@ -35,7 +35,7 @@
       {% endif %}
     </div>
     <span class="leise klein mitte">
-      {% if satz_modus %}{{ turnier.get_gewinnsaetze_display }} – gewonnen mit {{ turnier.gewinnsaetze }} Satz{{ turnier.gewinnsaetze|pluralize:"en" }}{% else %}Ein Satz bis {{ turnier.punkte_pro_satz }} Punkte{% endif %}
+      {% if satz_modus %}{{ turnier.get_gewinnsaetze_display }} – gewonnen mit {{ turnier.gewinnsaetze }} Satz{{ turnier.gewinnsaetze|pluralize:"en" }}{% else %}Punkte-Modus – das Team mit mehr Punkten gewinnt{% endif %}
     </span>
     {% if satz_modus %}
       <details class="karte"{% if spiel.punkte_a or spiel.punkte_b %} open{% endif %}>

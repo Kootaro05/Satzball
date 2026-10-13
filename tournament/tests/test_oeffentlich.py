@@ -70,7 +70,8 @@ class OeffentlicherSpielplanTests(TestCase):
         spiel.status, spiel.punkte_a, spiel.punkte_b = Spiel.Status.BEENDET, 25, 21
         spiel.save()
         r = self.client.get(self.url)
-        self.assertContains(r, "ein Satz bis 25")
+        self.assertContains(r, "Punkte-Modus")
+        self.assertNotContains(r, "ein Satz bis")
         self.assertContains(self.client.get(reverse("tabelle")), "PD = Punktdifferenz")
         self.assertContains(r, "Endstand")
 

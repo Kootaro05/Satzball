@@ -4,4 +4,4 @@ from django.apps import AppConfig
 class TournamentConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'tournament'
-    verbose_name = 'Turniere'
+    verbose_name = 'Satzball'

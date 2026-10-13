@@ -26,7 +26,7 @@ class Turnier(models.Model):
 
     class Zaehlmodus(models.TextChoices):
         SAETZE = "saetze", "Satz-Modus"
-        PUNKTE = "punkte", "Punkte-Modus"
+        PUNKTE = "punkte", "Punkte-Modus (ohne Sätze, mehr Punkte gewinnt)"
 
     class Gewinnsaetze(models.IntegerChoices):
         BEST_OF_1 = 1, "Best of 1"
@@ -68,7 +68,7 @@ class Turnier(models.Model):
         help_text="Nur im Satz-Modus.",
     )
     punkte_pro_satz = models.PositiveSmallIntegerField(
-        "Punkte pro Satz", default=25, help_text="Im Punkte-Modus: Zielpunktzahl des einen Satzes.",
+        "Punkte pro Satz", default=25, help_text="Nur im Satz-Modus.",
     )
     punkte_entscheidungssatz = models.PositiveSmallIntegerField(
         "Punkte Entscheidungssatz", default=15, help_text="Nur im Satz-Modus.",

@@ -39,12 +39,16 @@
         {% endfor %}
       </div>
 
-      <div class="feld">
-        <label for="{{ form.anzahl_gruppen.id_for_label }}">2 · Gruppen (nur bei Gruppen + K.-o.)</label>
+      {% with jgj=form.modus.value|stringformat:"s" %}
+      {# Nur bei Gruppen + K.-o.; spielplan.js blendet um, sobald der Modus wechselt. #}
+      <div class="stapel" data-nur-gruppen{% if jgj == "jeder_gegen_jeden" %} hidden{% endif %}>
+        <h2 class="zwischen"><label for="{{ form.anzahl_gruppen.id_for_label }}">2 · Gruppen</label></h2>
         {{ form.anzahl_gruppen }}
-        <span class="hilfe">2 Gruppen: Top 2 ins Halbfinale · 3 Gruppen: Gruppensieger + bester Zweiter ins Halbfinale · 4 Gruppen: Top 2 ins Viertelfinale</span>
+        <span class="hilfe leise klein">2 Gruppen: Top 2 ins Halbfinale · 3 Gruppen: Gruppensieger + bester Zweiter ins Halbfinale · 4 Gruppen: Top 2 ins Viertelfinale</span>
       </div>
 
+      <h2 class="zwischen"><span data-schritt-zeiten>{% if jgj == "jeder_gegen_jeden" %}2{% else %}3{% endif %}</span> · Zeiten</h2>
+      {% endwith %}
       <div class="kacheln kacheln--lose">
         <div class="feld">{{ form.beginn.label_tag }}{{ form.beginn }}{{ form.beginn.errors }}</div>
         <div class="feld">{{ form.slot_minuten.label_tag }}{{ form.slot_minuten }}{{ form.slot_minuten.errors }}</div>

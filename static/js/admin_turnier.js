@@ -1,11 +1,9 @@
-// Admin "Turnier": Im Punkte-Modus gelten Gewinnsätze und Entscheidungssatz nicht – ausgrauen.
+// Admin "Turnier": Im Punkte-Modus gelten Gewinnsätze und Punkte pro Satz nicht – ausgrauen.
 // Bewusst nicht "disabled": gesperrte Felder würden beim Speichern nicht mitgeschickt.
 document.addEventListener("DOMContentLoaded", function () {
   var modus = document.getElementById("id_zaehlmodus");
   if (!modus) return;
-  var nurSatzModus = ["gewinnsaetze", "punkte_entscheidungssatz"];
-  var punkteLabel = document.querySelector("label[for=id_punkte_pro_satz]");
-  var punkteText = punkteLabel ? punkteLabel.textContent : "";
+  var nurSatzModus = ["gewinnsaetze", "punkte_pro_satz", "punkte_entscheidungssatz"];
 
   function aktualisieren() {
     var punkte = modus.value === "punkte";
@@ -17,7 +15,6 @@ document.addEventListener("DOMContentLoaded", function () {
       var zeile = feld.closest(".form-row") || feld.closest(".fieldBox");
       if (zeile) zeile.classList.toggle("satzball-aus", punkte);
     });
-    if (punkteLabel) punkteLabel.textContent = punkte ? "Zielpunktzahl (ein Satz):" : punkteText;
   }
 
   modus.addEventListener("change", aktualisieren);

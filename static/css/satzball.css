@@ -191,10 +191,12 @@ b, strong { font-weight: 700; }
 .kopf__nav { display: flex; gap: 16px; flex-wrap: wrap; font-weight: 600; font-size: 14px; }
 .kopf__nav a { color: var(--mut); }
 .kopf__nav a[aria-current="page"] { color: var(--ac); }
-.auswahl, .feld select { height: 44px; border: 1.5px solid var(--line); border-radius: 12px; padding: 0 12px; background: var(--sf); color: var(--ink); font: inherit; }
+.auswahl, .feld select, .formular select { height: 44px; border: 1.5px solid var(--line); border-radius: 12px; padding: 0 12px; background: var(--sf); color: var(--ink); font: inherit; }
 .orga-raster { display: grid; gap: 24px; align-items: start; }
 @media (min-width: 900px) { .orga-raster { grid-template-columns: 380px minmax(0, 1fr); } }
 .formular--eng { gap: 18px; }
+.zwischen label { font: inherit; }
+[data-nur-gruppen][hidden] { display: none; }
 .wahl { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 14px; cursor: pointer; }
 .wahl:has(input:checked) { border-color: var(--ac); background: var(--acs); }
 .wahl input { margin-top: 4px; accent-color: var(--ac); }

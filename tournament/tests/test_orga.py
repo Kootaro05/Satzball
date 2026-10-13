@@ -42,6 +42,25 @@ class OrgaSeitenTests(TestCase):
         self.assertContains(r, "Schiri:")
         self.assertEqual(r.context["konflikte"], [])
 
+    def test_gruppenwahl_nur_bei_gruppen_ko(self):
+        r = self.client.get(self.url)  # Turnier steht auf Gruppen + K.-o.
+        self.assertContains(r, '<div class="stapel" data-nur-gruppen>', html=False)
+        self.assertContains(r, "<span data-schritt-zeiten>3</span> · Zeiten", html=False)
+        self.t.modus = Turnier.Modus.JEDER_GEGEN_JEDEN
+        self.t.save()
+        r = self.client.get(self.url)
+        self.assertContains(r, '<div class="stapel" data-nur-gruppen hidden>', html=False)
+        self.assertContains(r, "<span data-schritt-zeiten>2</span> · Zeiten", html=False)
+
+    def test_punkte_modus_ohne_zielpunktzahl(self):
+        self.t.zaehlmodus = Turnier.Zaehlmodus.PUNKTE
+        self.t.save()
+        spielplan.erzeugen(self.t)
+        spiel = self.t.spiele.filter(phase=Spiel.Phase.GRUPPE).first()
+        r = self.client.get(reverse("orga_ergebnis", args=[spiel.pk]))
+        self.assertContains(r, "das Team mit mehr Punkten gewinnt")
+        self.assertNotContains(r, "Satz bis")
+
     def test_fehler_wird_angezeigt(self):
         r = self.client.post(self.url, {
             "aktion": "erzeugen", "turnier": self.t.pk, "modus": "gruppen_ko",
