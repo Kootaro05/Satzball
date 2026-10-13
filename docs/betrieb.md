@@ -112,7 +112,8 @@ Eine heruntergeladene Sicherung vorher zurück ins Volume legen:
 docker exec satzball python manage.py testturnier --teams 10 --spielplan
 ```
 
-Legt ein Turnier „Probelauf …“ für heute an: 10 bezahlte Teams, 2 noch offene, Spielplan veröffentlicht.
+Legt ein Turnier „Probelauf …“ für heute an: öffentlich sichtbar, 10 bezahlte Teams, 2 noch offene,
+Spielplan veröffentlicht.
 Mails gehen an `@example.invalid` und kommen nicht an. Das Testturnier ist bis zum Löschen das
 „aktuelle“ Turnier auf der Startseite – danach im Admin löschen.
 

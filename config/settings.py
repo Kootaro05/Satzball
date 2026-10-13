@@ -67,6 +67,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "tournament.context_processors.satzball",
+                "tournament.context_processors.aktuelles_turnier",
             ],
         },
     },
@@ -106,6 +108,9 @@ STORAGES = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# AGPL-3.0: Nutzer der Webseite müssen an den Quellcode kommen (Link in der Fußzeile).
+QUELLCODE_URL = os.environ.get("SATZBALL_QUELLCODE_URL", "https://github.com/Kootaro05/Satzball")
 
 # E-Mail (nur für den Bearbeitungslink). Ohne EMAIL_HOST landen Mails im Log/der Konsole.
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "")

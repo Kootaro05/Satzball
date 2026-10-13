@@ -183,6 +183,9 @@ So wenig Daten wie möglich: Name der Spieler, eine E-Mail pro Team. Keine Telef
 | Proxy auf dem VPS | Vorhandener nginx | Container nur auf 127.0.0.1, nginx macht HTTPS (siehe `docs/betrieb.md`) |
 | Spielerzahl | Empfohlene Zahl ist keine harte Regel | Pflicht sind mindestens 2 Spieler; darunter lehnt das Formular ab, unter der Empfehlung nur ein Hinweis |
 | Tabelle | Eigene Seite statt unter dem Spielplan | Menüpunkt „Tabelle“ wird aktiv markiert; Menü mit Symbolen |
+| Turnier-Wahl | Besucher können frühere/andere Turniere ansehen | Seite `/turniere/`, Auswahl wird gemerkt |
+| Sichtbarkeit | Orga schaltet jedes Turnier ausdrücklich frei | Feld „öffentlich sichtbar“ (Standard aus); Entwürfe und Testturniere bleiben unsichtbar |
+| Lizenz | Open Source unter AGPL-3.0, © 2026 TetraMedia | Fußzeile verlinkt den Quellcode; App ohne hochschulspezifische Texte |
 
 **Noch offen:**
 

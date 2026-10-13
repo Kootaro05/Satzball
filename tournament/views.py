@@ -19,6 +19,29 @@ from .tabelle import gruppentabellen
 logger = logging.getLogger(__name__)
 
 
+def gewaehltes_turnier(request):
+    """Öffentliches Turnier aus ?turnier=<id> (wird in der Session gemerkt), sonst die gemerkte Wahl,
+    sonst das aktuelle. Ungültige, gelöschte oder nicht öffentliche Turniere fallen still auf das aktuelle zurück."""
+    turnier_id = request.GET.get("turnier") or request.session.get("turnier_id")
+    if turnier_id and str(turnier_id).isdigit():
+        turnier = Turnier.objects.filter(pk=turnier_id, oeffentlich=True).first()
+        if turnier:
+            if request.session.get("turnier_id") != turnier.pk:
+                request.session["turnier_id"] = turnier.pk
+            return turnier
+    request.session.pop("turnier_id", None)
+    return Turnier.aktuelles(nur_oeffentliche=True)
+
+
+def turniere(request):
+    aktuelles = Turnier.aktuelles(nur_oeffentliche=True)
+    return render(request, "tournament/turniere.html", {
+        "turnier": gewaehltes_turnier(request),
+        "aktuelles": aktuelles,
+        "turniere": Turnier.objects.filter(oeffentlich=True).order_by("-datum"),
+    })
+
+
 def _sichtbare_teams(turnier):
     """Teams für öffentliche Listen: ohne Absagen, Startplätze vor Warteliste."""
     teams = turnier.teams.exclude(status=Team.Status.ABGESAGT).prefetch_related(
@@ -28,17 +51,18 @@ def _sichtbare_teams(turnier):
 
 
 def startseite(request):
-    turnier = Turnier.aktuelles()
+    turnier = gewaehltes_turnier(request)
     teams = _sichtbare_teams(turnier) if turnier else []
     return render(request, "tournament/startseite.html", {
         "turnier": turnier,
+        "weitere_turniere": turnier and Turnier.objects.filter(oeffentlich=True).exclude(pk=turnier.pk).exists(),
         "teams": teams,
         "plaetze": [i < turnier.belegte_plaetze for i in range(turnier.max_teams)] if turnier else [],
     })
 
 
 def teamliste(request):
-    turnier = Turnier.aktuelles()
+    turnier = gewaehltes_turnier(request)
     return render(request, "tournament/teamliste.html", {
         "turnier": turnier,
         "teams": _sichtbare_teams(turnier) if turnier else [],
@@ -67,7 +91,7 @@ def _ko_hinweis(turnier, anzahl_gruppen):
 
 
 def spielplan(request):
-    turnier = Turnier.aktuelles()
+    turnier = gewaehltes_turnier(request)
     if not turnier or not turnier.spielplan_veroeffentlicht:
         return render(request, "tournament/spielplan.html", {"turnier": turnier})
 
@@ -97,7 +121,7 @@ def spielplan(request):
 
 
 def tabelle(request):
-    turnier = Turnier.aktuelles()
+    turnier = gewaehltes_turnier(request)
     if not turnier or not turnier.spielplan_veroeffentlicht:
         return render(request, "tournament/tabelle.html", {"turnier": turnier})
     tabellen = gruppentabellen(turnier)
@@ -114,7 +138,7 @@ def datenschutz(request):
 
 
 def anmelden(request):
-    turnier = Turnier.aktuelles()
+    turnier = gewaehltes_turnier(request)
     if not turnier or not turnier.anmeldung_moeglich:
         return render(request, "tournament/anmeldung_geschlossen.html", {"turnier": turnier})
 

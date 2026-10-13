@@ -23,16 +23,20 @@ class GruppeInline(admin.TabularInline):
 @admin.register(Turnier)
 class TurnierAdmin(admin.ModelAdmin):
     list_display = [
-        "name", "datum", "ort", "modus", "zaehlmodus", "anmeldung_offen", "anzahl_teams", "max_teams", "spielplan_link",
+        "name", "datum", "oeffentlich", "ort", "modus", "zaehlmodus", "anmeldung_offen", "anzahl_teams", "max_teams",
+        "spielplan_link",
     ]
-    list_filter = ["anmeldung_offen", "modus", "zaehlmodus"]
+    list_filter = ["oeffentlich", "anmeldung_offen", "modus", "zaehlmodus"]
     search_fields = ["name", "ort"]
     date_hierarchy = "datum"
     inlines = [GruppeInline]
     actions = ["teamdaten_loeschen"]
     readonly_fields = ["teamdaten_geloescht_am"]
+
+    class Media:
+        js = ["js/admin_turnier.js"]  # Satz-Felder im Punkte-Modus ausgrauen
     fieldsets = [
-        (None, {"fields": ["name", "datum", "beginn", "ort", "startgebuehr_eur", "zahlungsinfo"]}),
+        (None, {"fields": ["name", "oeffentlich", "datum", "beginn", "ort", "startgebuehr_eur", "zahlungsinfo"]}),
         ("Anmeldung", {"fields": ["anmeldung_offen", "meldeschluss", "max_teams", "min_spieler", "max_spieler"]}),
         ("Modus", {"fields": ["modus", "anzahl_felder", "slot_minuten", "spielplan_veroeffentlicht"]}),
         ("Zählweise", {"fields": ["zaehlmodus", "gewinnsaetze", "punkte_pro_satz", "punkte_entscheidungssatz"]}),

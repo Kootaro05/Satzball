@@ -4,6 +4,7 @@ from . import orga, views
 
 urlpatterns = [
     path("", views.startseite, name="startseite"),
+    path("turniere/", views.turniere, name="turniere"),
     path("teams/", views.teamliste, name="teamliste"),
     path("spielplan/", views.spielplan, name="spielplan"),
     path("tabelle/", views.tabelle, name="tabelle"),

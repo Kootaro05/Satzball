@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block titel %}Turniere · Satzball{% endblock %}
+{% block banner %}{% endblock %}
+{% block inhalt %}
+<div class="stapel stapel--eng">
+  <h1 class="titel titel--m">Turniere</h1>
+  <span class="leise">Wähle ein Turnier – Teams, Spielplan und Tabelle zeigen dann dieses Turnier.</span>
+</div>
+{% if turniere %}
+  <div class="liste">
+    {% for t in turniere %}
+      <a class="liste__zeile liste__zeile--link" href="{% url 'startseite' %}?turnier={{ t.pk }}"{% if turnier and t.pk == turnier.pk %} aria-current="true"{% endif %}>
+        <span class="stapel stapel--eng">
+          <span class="liste__name">{{ t.name }}</span>
+          <span class="leise klein">{{ t.datum|date:"D, j. M Y" }} · {{ t.ort }}</span>
+        </span>
+        {% if aktuelles and t.pk == aktuelles.pk %}<span class="badge badge--bestaetigt">Aktuell</span>
+        {% elif t.anmeldung_moeglich %}<span class="badge badge--angemeldet">Anmeldung offen</span>
+        {% elif t.vorbei %}<span class="badge badge--neutral">Vorbei</span>
+        {% else %}<span class="badge badge--neutral">Geplant</span>{% endif %}
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="leise">Noch keine Turniere.</p>
+{% endif %}
+{% endblock %}

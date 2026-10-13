@@ -1,6 +1,8 @@
 # CLAUDE.md – Satzball
 
-WebApp für interne Volleyball-Turniere an der DHSN Leipzig.
+WebApp für interne Volleyball-Turniere an Hochschulen (entstanden an der DHSN Leipzig).
+Open Source unter AGPL-3.0: Im Code und in den Seiten keine DHSN-spezifischen Texte, damit andere
+Hochschulen Satzball nutzen können. Fußzeile verlinkt den Quellcode (`SATZBALL_QUELLCODE_URL`).
 
 **Verbindlich:** `docs/konzept.md` (Anforderungen, Datenmodell, Spielplan-Logik) und
 `docs/design.html` (UI-Entwurf, 8 Screens). Vor größeren Änderungen dort nachlesen.
@@ -63,6 +65,14 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
 - Zahlungs-Tracking im Admin (Teamliste): Haken "bezahlt" und Zahlungsart direkt in der Liste,
   Kennzahlen aus `Turnier.zahlungsuebersicht()` (erwartet = Gebühr × Teams mit Startplatz),
   Filter "Unbezahlt (mit Startplatz)", Aktion "Von der Warteliste nachrücken".
+- Sichtbarkeit: Besucher sehen nur Turniere mit `Turnier.oeffentlich` (Standard aus, die Orga schaltet frei).
+  Öffentliche Seiten nutzen `Turnier.aktuelles(nur_oeffentliche=True)`, Orga/Admin sehen alle.
+- Turnier-Wahl (öffentlich): `views.gewaehltes_turnier(request)` – `?turnier=<id>` (in der Session gemerkt),
+  sonst das aktuelle öffentliche Turnier. Liste unter `/turniere/`; bei einem anderen als dem aktuellen Turnier zeigt
+  `base.html` einen Hinweis (Block `banner`, auf Orga- und Kapitänsseiten leer).
+- Admin-Optik: `templates/admin/base_site.html` + `static/css/admin.css` (nur Django-CSS-Variablen,
+  Schrift, Rundungen). Turnier im Punkte-Modus: `static/js/admin_turnier.js` graut Satz-Felder aus
+  (bewusst nicht `disabled`, sonst fehlen die Werte beim Speichern).
 - Spielerzahl: Pflicht sind mindestens `MIN_SPIELER` = 2, höchstens `max_spieler`. `min_spieler` am Turnier
   ist nur eine **Empfehlung** (gelber Hinweis im Formular, keine Ablehnung).
 - Spielernamen sind **öffentlich** (Teamliste). E-Mail und Zahlungsstatus sehen nur Orga und Kapitän.
