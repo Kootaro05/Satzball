@@ -119,6 +119,15 @@ class Turnier(models.Model):
     def freie_plaetze(self):
         return max(self.max_teams - self.belegte_plaetze, 0)
 
+    @property
+    def warteliste_anzahl(self):
+        return self.teams.filter(status=Team.Status.WARTELISTE).count()
+
+    @property
+    def neue_auf_warteliste(self):
+        """Neue Anmeldungen stellen sich hinten an, solange alle Plätze belegt sind oder schon jemand wartet."""
+        return self.freie_plaetze == 0 or self.warteliste_anzahl > 0
+
     def zahlungsuebersicht(self):
         """Kennzahlen für die Orga (Screen 06). Erwartet wird die Gebühr aller Teams mit Startplatz."""
         teams = list(self.teams.only("status", "bezahlt"))

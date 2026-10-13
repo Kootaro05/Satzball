@@ -152,11 +152,13 @@ def anmelden(request):
         with transaction.atomic():
             team = form.save(commit=False)
             team.turnier = turnier
-            team.status = Team.Status.ANGEMELDET if turnier.freie_plaetze else Team.Status.WARTELISTE
+            # Wer zuerst kommt: Wartet schon jemand, stellt sich das neue Team hinten an
+            team.status = Team.Status.WARTELISTE if turnier.neue_auf_warteliste else Team.Status.ANGEMELDET
             team.save()
             formset.instance = team
             formset.save()
         _bearbeitungslink_senden(request, team)
+        warteliste.auffuellen(turnier, request)  # mit Haken rückt ggf. das erste wartende Team nach
         return redirect("team_angemeldet", token=team.edit_token)
 
     return render(request, "tournament/anmelden.html", {"turnier": turnier, "form": form, "formset": formset})

@@ -140,3 +140,49 @@ class WartelisteTests(TestCase):
         }, follow=True)
         self.assertContains(r, "2 Team(s) von der Warteliste nachgerückt, Mail verschickt")
         self.assertEqual([m.to[0] for m in mail.outbox], ["alpha@example.de", "mitte@example.de"])
+
+    def anmelden(self, name):
+        return self.client.post(reverse("anmelden"), {
+            "name": name, "kapitaen_name": "K", "kapitaen_email": f"{name.lower()}@example.de", "datenschutz": "on",
+            "spieler-TOTAL_FORMS": "2", "spieler-INITIAL_FORMS": "0",
+            "spieler-0-vorname": "A", "spieler-0-nachname": "B", "spieler-1-vorname": "C", "spieler-1-nachname": "D",
+        })
+
+    def test_neue_anmeldung_ueberholt_die_warteliste_nicht(self):
+        self.t.max_teams = 2  # ein Platz frei, aber Alpha und Mitte warten schon (Haken aus)
+        self.t.save()
+        self.assertContains(self.client.get(reverse("anmelden")), "Es warten schon Teams")
+        self.anmelden("Neu")
+        neu = Team.objects.get(name="Neu")
+        self.assertEqual((neu.status, neu.wartelisten_platz), (Team.Status.WARTELISTE, 3))
+        r = self.client.get(reverse("team_angemeldet", args=[neu.edit_token]))
+        self.assertContains(r, "Platz 3 der Warteliste")
+
+    def test_neue_anmeldung_mit_haken_holt_den_ersten_wartenden(self):
+        self.t.max_teams = 2
+        self.automatisch()
+        self.anmelden("Neu")
+        self.alpha.refresh_from_db()
+        self.assertEqual(self.alpha.status, Team.Status.ANGEMELDET)  # Alpha bekommt den Platz, nicht "Neu"
+        self.assertEqual(Team.objects.get(name="Neu").wartelisten_platz, 2)
+
+    def test_ohne_wartende_gibt_es_den_platz_direkt(self):
+        Team.objects.filter(status=Team.Status.WARTELISTE).delete()
+        self.t.max_teams = 2
+        self.t.save()
+        self.anmelden("Neu")
+        self.assertEqual(Team.objects.get(name="Neu").status, Team.Status.ANGEMELDET)
+
+    def test_zurueckgestuftes_team_rueckt_nicht_sofort_wieder_nach(self):
+        self.automatisch()
+        self.orga()
+        # Zeta (frühestes Team) bewusst auf die Warteliste: Alpha bekommt den Platz, Zeta bleibt wartend
+        self.admin_team_speichern(self.zeta, status="warteliste")
+        self.zeta.refresh_from_db()
+        self.alpha.refresh_from_db()
+        self.assertEqual(self.zeta.status, Team.Status.WARTELISTE)
+        self.assertEqual(self.alpha.status, Team.Status.ANGEMELDET)
+        # beim nächsten freien Platz ist Zeta (früheste Anmeldung) wieder als Erstes dran
+        self.client.post(reverse("team_abmelden", args=[self.alpha.edit_token]))
+        self.zeta.refresh_from_db()
+        self.assertEqual(self.zeta.status, Team.Status.ANGEMELDET)

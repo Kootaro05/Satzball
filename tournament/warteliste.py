@@ -32,13 +32,17 @@ def nachruecken(team, request):
         logger.exception("Nachrück-Mail für Team %s konnte nicht verschickt werden", team.pk)
 
 
-def auffuellen(turnier, request):
-    """Freie Plätze in Anmelde-Reihenfolge von der Warteliste füllen. Gibt die nachgerückten Teams zurück."""
+def auffuellen(turnier, request, ausser=None):
+    """Freie Plätze in Anmelde-Reihenfolge von der Warteliste füllen. Gibt die nachgerückten Teams zurück.
+    `ausser`: Team, das die Orga gerade selbst auf die Warteliste gesetzt hat – es wird nicht sofort wieder geholt."""
     if not turnier.warteliste_automatisch or turnier.vorbei:
         return []
+    wartend = turnier.teams.filter(status=Team.Status.WARTELISTE).order_by(*Team.REIHENFOLGE)
+    if ausser is not None:
+        wartend = wartend.exclude(pk=ausser.pk)
     nachgerueckt = []
     while turnier.freie_plaetze > 0:
-        team = turnier.teams.filter(status=Team.Status.WARTELISTE).order_by(*Team.REIHENFOLGE).first()
+        team = wartend.first()
         if team is None:
             break
         nachruecken(team, request)

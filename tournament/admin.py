@@ -190,11 +190,13 @@ class TeamAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-        self._auffuellen(request, [obj.turnier])
+        # Von der Orga gerade auf die Warteliste gesetzt: nicht im selben Moment wieder nachrücken lassen
+        zurueckgestuft = change and obj.status == Team.Status.WARTELISTE and form.initial.get("status") != obj.status
+        self._auffuellen(request, [obj.turnier], ausser=obj if zurueckgestuft else None)
 
-    def _auffuellen(self, request, turniere):
+    def _auffuellen(self, request, turniere, ausser=None):
         for turnier in turniere:
-            for team in warteliste.auffuellen(turnier, request):
+            for team in warteliste.auffuellen(turnier, request, ausser=ausser):
                 self.message_user(request, f"{team} ist automatisch von der Warteliste nachgerückt (Mail verschickt).",
                                   messages.SUCCESS)
 

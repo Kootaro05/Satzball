@@ -43,7 +43,9 @@
       <div class="plaetze" style="--anzahl: {{ turnier.max_teams }}" aria-hidden="true">
         {% for belegt in plaetze %}<span{% if belegt %} class="belegt"{% endif %}></span>{% endfor %}
       </div>
-      <span class="leise">Wenn alle Plätze vergeben sind, kommt ihr auf die Warteliste.</span>
+      {% with wartend=turnier.warteliste_anzahl %}
+      <span class="leise">{% if wartend %}{{ wartend }} Team{{ wartend|pluralize:"s" }} auf der Warteliste – neue Anmeldungen kommen dahinter.{% else %}Wenn alle Plätze vergeben sind, kommt ihr auf die Warteliste.{% endif %}</span>
+      {% endwith %}
     </div>
     <a class="btn" href="{% url 'anmelden' %}">Team anmelden <span aria-hidden="true">→</span></a>
   {% endif %}

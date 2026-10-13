@@ -8,8 +8,8 @@
   <h1 class="titel titel--m">Team anmelden</h1>
   <span class="leise">Kein Konto nötig. Den Bearbeitungslink bekommst du per Mail.</span>
 </div>
-{% if not turnier.freie_plaetze %}
-  <div class="hinweis hinweis--warnung">Alle Plätze sind vergeben. Euer Team kommt auf die Warteliste.</div>
+{% if turnier.neue_auf_warteliste %}
+  <div class="hinweis hinweis--warnung">{% if turnier.freie_plaetze %}Es warten schon Teams auf einen Platz.{% else %}Alle Plätze sind vergeben.{% endif %} Euer Team kommt auf die Warteliste – die Plätze gehen in der Reihenfolge der Anmeldung.</div>
 {% endif %}
 
 <form method="post" class="formular" novalidate>
