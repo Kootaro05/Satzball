@@ -129,6 +129,8 @@ def schiris_zuteilen(slots, gruppen_teams):
         beschaeftigt = {t for p in slot for t in (p.a, p.b)} | {p.schiri for p in slot if p.fest and p.schiri}
         for p in slot:
             if p.fest:
+                if p.schiri:  # beendetes Spiel: der Einsatz zählt, sonst pfeift dasselbe Team gleich wieder
+                    einsaetze[p.schiri] += 1
                 continue
             eigene = [t for t in gruppen_teams.get(p.gruppe, []) if t not in beschaeftigt]
             andere = [t for t in alle if t not in beschaeftigt and t not in eigene]

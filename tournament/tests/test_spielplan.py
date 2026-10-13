@@ -85,6 +85,14 @@ class VerteilungTests(SimpleTestCase):
         self.assertEqual(slot[0].schiri, "C")  # D und E spielen gerade: das spielfreie Team pfeift
         self.assertIsNone(slot[1].schiri)  # A, B spielen, C pfeift schon – niemand frei
 
+    def test_schiris_beendeter_spiele_zaehlen_beim_neu_verteilen(self):
+        gruppen = {"A": list("ABC"), "B": list("DEF")}
+        beendet = spielplan.Partie("A", "B", "A", schiri="D", fest=True)
+        offen = spielplan.Partie("A", "C", "A")
+        spielplan.schiris_zuteilen([[beendet], [offen]], gruppen)
+        self.assertEqual(beendet.schiri, "D")
+        self.assertIn(offen.schiri, ("E", "F"))  # D hat schon gepfiffen
+
     def test_jeder_gegen_jeden_pfeift_das_spielfreie_team(self):
         gruppen = [("A", list("ABCDE"))]
         slots = spielplan.schiris_zuteilen(spielplan.slots_verteilen(spielplan.gruppenpartien(gruppen), 2), dict(gruppen))
