@@ -168,8 +168,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); outlin
     background-color: var(--darkened-bg); font-size: 18px; line-height: 1;
 }
 .toggle-nav-sidebar:hover, .toggle-nav-sidebar:focus { background-color: var(--selected-bg); }
-.main > #nav-sidebar + .content { max-width: calc(100% - 44px); }
-.main.shifted > #nav-sidebar + .content { max-width: calc(100% - 275px - 44px); }
+/* Nur ab 768 px: darunter blendet Django Leiste und Knopf aus und gibt dem Inhalt die volle Breite. */
+@media (min-width: 768px) {
+    .main > #nav-sidebar + .content { max-width: calc(100% - 44px); }
+    .main.shifted > #nav-sidebar + .content { max-width: calc(100% - 275px - 44px); }
+}
 
 #nav-sidebar { border: 0; background: transparent; padding: 14px 0 24px 16px; }
 /* Aufgeklappt: Knopf rechts neben dem Suchfeld (Reihenfolge Leiste, Knopf, Inhalt); zugeklappt links. */
