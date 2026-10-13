@@ -86,15 +86,26 @@ def spielplan(request):
     live = laufender_slot(turnier, slots, jetzt)
     for slot in slots:
         slot["laeuft"] = slot["zeit"] == live
-    tabellen = gruppentabellen(turnier)
     ko = [s for s in spiele if s.phase != Spiel.Phase.GRUPPE]
     return render(request, "tournament/spielplan.html", {
         "turnier": turnier,
         "slots": slots,
-        "tabellen": tabellen,
         "ko_beginn": min((s.uhrzeit for s in ko), default=None),
-        "ko_hinweis": _ko_hinweis(turnier, len(tabellen)),
+        "ko_hinweis": _ko_hinweis(turnier, turnier.gruppen.count()),
         "satz_modus": satz_modus,
+    })
+
+
+def tabelle(request):
+    turnier = Turnier.aktuelles()
+    if not turnier or not turnier.spielplan_veroeffentlicht:
+        return render(request, "tournament/tabelle.html", {"turnier": turnier})
+    tabellen = gruppentabellen(turnier)
+    return render(request, "tournament/tabelle.html", {
+        "turnier": turnier,
+        "tabellen": tabellen,
+        "ko_hinweis": _ko_hinweis(turnier, len(tabellen)),
+        "satz_modus": turnier.zaehlmodus == Turnier.Zaehlmodus.SAETZE,
     })
 
 

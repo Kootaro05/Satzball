@@ -10,6 +10,10 @@ from django.db import models
 from django.utils import timezone
 
 
+# Darunter kann ein Team nicht antreten. min_spieler am Turnier ist nur eine Empfehlung.
+MIN_SPIELER = 2
+
+
 def neuer_edit_token():
     # 24 Zufallsbytes -> 32 URL-sichere Zeichen
     return secrets.token_urlsafe(24)
@@ -39,7 +43,10 @@ class Turnier(models.Model):
     )
     meldeschluss = models.DateTimeField()
     max_teams = models.PositiveSmallIntegerField("max. Teams")
-    min_spieler = models.PositiveSmallIntegerField("min. Spieler pro Team", default=6)
+    min_spieler = models.PositiveSmallIntegerField(
+        "empfohlene Spielerzahl", default=6,
+        help_text=f"Weniger Spieler sind erlaubt (Hinweis im Formular); Pflicht sind mindestens {MIN_SPIELER}.",
+    )
     max_spieler = models.PositiveSmallIntegerField("max. Spieler pro Team", default=10)
     anmeldung_offen = models.BooleanField("Anmeldung offen", default=False)
     modus = models.CharField(max_length=20, choices=Modus.choices, default=Modus.JEDER_GEGEN_JEDEN)
@@ -129,8 +136,10 @@ class Turnier(models.Model):
         self.save(update_fields=["teamdaten_geloescht_am"])
 
     def clean(self):
+        if self.max_spieler is not None and self.max_spieler < MIN_SPIELER:
+            raise ValidationError({"max_spieler": f"Mindestens {MIN_SPIELER}."})
         if self.min_spieler is not None and self.max_spieler is not None and self.min_spieler > self.max_spieler:
-            raise ValidationError({"max_spieler": "Muss mindestens so groß sein wie min. Spieler."})
+            raise ValidationError({"max_spieler": "Muss mindestens so groß sein wie die empfohlene Spielerzahl."})
 
 
 class Gruppe(models.Model):

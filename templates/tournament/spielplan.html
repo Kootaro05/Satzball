@@ -47,18 +47,6 @@
     {% endfor %}
   </div>
 
-  <div class="stapel" id="tabelle">
-    <h2 class="zwischen zwischen--l">Tabelle</h2>
-    {% for gruppe, tabelle in tabellen %}
-      <div class="stapel stapel--eng">
-        {% if tabellen|length > 1 %}<h3 class="zwischen">Gruppe {{ gruppe.name }}</h3>{% endif %}
-        {% include "tournament/_tabelle.html" %}
-      </div>
-    {% endfor %}
-    <span class="leise klein">
-      {% if satz_modus %}Sp = Spiele · S = Siege · SD = Satzdifferenz · BD = Ballpunktdifferenz. Sortiert nach Siegen, SD, BD, direktem Vergleich.{% else %}Sp = Spiele · S = Siege · PD = Punktdifferenz. Sortiert nach Siegen, PD, erzielten Punkten, direktem Vergleich.{% endif %}
-      {{ ko_hinweis }}
-    </span>
-  </div>
+  <a class="btn btn--sekundaer" href="{% url 'tabelle' %}">Zur Tabelle <span aria-hidden="true">→</span></a>
 {% endif %}
 {% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titel %}Tabelle{% if turnier %} · {{ turnier.name }}{% endif %}{% endblock %}
+{% block inhalt %}
+<div class="stapel stapel--eng">
+  <h1 class="titel titel--m">Tabelle</h1>
+  {% if turnier %}<span class="leise">{{ turnier.name }}</span>{% endif %}
+</div>
+
+{% if not tabellen %}
+  <p class="leise">Die Tabelle gibt es, sobald der Spielplan veröffentlicht ist.</p>
+{% else %}
+  {% for gruppe, tabelle in tabellen %}
+    <div class="stapel stapel--eng">
+      {% if tabellen|length > 1 %}<h2 class="zwischen">Gruppe {{ gruppe.name }}</h2>{% endif %}
+      {% include "tournament/_tabelle.html" %}
+    </div>
+  {% endfor %}
+  <span class="leise klein">
+    {% if satz_modus %}Sp = Spiele · S = Siege · SD = Satzdifferenz · BD = Ballpunktdifferenz. Sortiert nach Siegen, SD, BD, direktem Vergleich.{% else %}Sp = Spiele · S = Siege · PD = Punktdifferenz. Sortiert nach Siegen, PD, erzielten Punkten, direktem Vergleich.{% endif %}
+    {{ ko_hinweis }}
+  </span>
+  <a class="btn btn--sekundaer" href="{% url 'spielplan' %}">Zum Spielplan <span aria-hidden="true">→</span></a>
+{% endif %}
+{% endblock %}

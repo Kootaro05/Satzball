@@ -3,7 +3,7 @@
 (function () {
   var box = document.querySelector("[data-spieler]");
   if (!box) return;
-  var min = Number(box.dataset.min), max = Number(box.dataset.max);
+  var pflicht = Number(box.dataset.pflicht), empfohlen = Number(box.dataset.empfohlen), max = Number(box.dataset.max);
   var prefix = box.dataset.prefix;
   var liste = box.querySelector(".spieler");
   var vorlage = box.querySelector("template");
@@ -27,8 +27,9 @@
     hinzu.disabled = sichtbar.length >= max;
     if (!hinweis) return;
     hinweis.hidden = false;
-    hinweis.classList.toggle("hinweis--warnung", n < min);
-    hinweis.textContent = n < min ? "Mindestens " + min + " Spieler – noch " + (min - n) + " fehlen."
+    hinweis.classList.toggle("hinweis--warnung", n < empfohlen);
+    hinweis.textContent = n < pflicht ? "Mindestens " + pflicht + " Spieler – noch " + (pflicht - n) + (pflicht - n === 1 ? " fehlt." : " fehlen.")
+      : n < empfohlen ? "Empfohlen sind " + empfohlen + " Spieler. Ihr könnt aber auch mit " + n + " antreten."
       : n >= max ? "Maximum von " + max + " Spielern erreicht."
       : "Passt. Bis zu " + (max - n) + " weitere möglich.";
   }

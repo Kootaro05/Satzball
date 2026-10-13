@@ -30,6 +30,10 @@ class TurnierTests(TestCase):
         self.assertEqual(t.anzahl_felder, 2)
         self.assertFalse(t.anmeldung_offen)
 
+    def test_max_spieler_mindestens_zwei(self):
+        with self.assertRaises(ValidationError):
+            turnier(min_spieler=1, max_spieler=1).full_clean()
+
     def test_min_spieler_groesser_max_spieler_ist_ungueltig(self):
         t = turnier(min_spieler=8, max_spieler=6)
         with self.assertRaises(ValidationError):
