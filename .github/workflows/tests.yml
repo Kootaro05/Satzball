@@ -39,7 +39,7 @@ jobs:
           curl -fsS http://localhost:8000/ | grep -q "Satzball"
           curl -fsS -o /dev/null http://localhost:8000/admin/login/
           curl -fsS -o /dev/null http://localhost:8000/static/img/logo.svg
-          docker exec satzball python manage.py testturnier --teams 4 --spielplan
+          docker exec satzball python manage.py testturnier --teams 6 --spielplan
           curl -fsS http://localhost:8000/spielplan/ | grep -q "Probelauf"
           curl -fsS -o /dev/null http://localhost:8000/tabelle/
 
