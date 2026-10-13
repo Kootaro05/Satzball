@@ -55,6 +55,9 @@ Werte eintragen, speichern mit **Strg + O**, **Enter**, beenden mit **Strg + X**
 - **Keine Anführungszeichen.** Docker liest die Datei wörtlich, Anführungszeichen werden Teil des Werts.
 - **Absender** in der Form `DEFAULT_FROM_EMAIL=Name <adresse@domain>` – mit `@` und spitzen Klammern.
   Als Adresse das Postfach von `EMAIL_HOST_USER` nehmen, fremde Absender lehnen die meisten Anbieter ab.
+- **Verantwortlicher** für die Datenschutzerklärung: `SATZBALL_VERANTWORTLICHER=Name | Straße | PLZ Ort | E-Mail: …`
+  (jedes `|` wird ein Zeilenumbruch). Die Erklärung nennt 14 Tage Speicherdauer für Server-Logs – das ist
+  die Voreinstellung von nginx unter Debian; prüfen mit `grep rotate /etc/logrotate.d/nginx` (erwartet `rotate 14`).
 
 **3. Container starten** – Port nur lokal, damit niemand nginx umgehen kann
 

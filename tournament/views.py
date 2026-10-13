@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 
+from django.conf import settings
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.db import transaction
@@ -134,7 +135,7 @@ def tabelle(request):
 
 
 def datenschutz(request):
-    return render(request, "tournament/datenschutz.html")
+    return render(request, "tournament/datenschutz.html", {"verantwortlicher": settings.VERANTWORTLICHER})
 
 
 def anmelden(request):

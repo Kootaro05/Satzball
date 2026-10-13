@@ -21,6 +21,9 @@ class Zeile:
     punkte_plus: int = 0
     punkte_minus: int = 0
     platz: int = 0
+    # Teams, mit denen dieses Team auch nach dem direkten Vergleich gleichsteht (sonst leer).
+    # Die Reihenfolge innerhalb so einer Gruppe ist nur alphabetisch – sportlich ist sie offen.
+    gleichstand: tuple = ()
 
     @property
     def sd(self):
@@ -60,7 +63,13 @@ def _direkter_vergleich(zeilen, spiele, satz_modus):
     for spiel in spiele:
         if spiel.team_a in teams and spiel.team_b in teams:
             _eintragen(mini, spiel, satz_modus)
-    return sorted(zeilen, key=lambda z: (*(-k for k in _schluessel(mini[z.team], satz_modus)), str(z.team)))
+    sortiert = sorted(zeilen, key=lambda z: (*(-k for k in _schluessel(mini[z.team], satz_modus)), str(z.team)))
+    for _, gleich in groupby(sortiert, key=lambda z: _schluessel(mini[z.team], satz_modus)):
+        gleich = list(gleich)
+        if len(gleich) > 1:
+            for zeile in gleich:
+                zeile.gleichstand = tuple(z.team for z in gleich)
+    return sortiert
 
 
 def berechnen(teams, spiele, zaehlmodus):
