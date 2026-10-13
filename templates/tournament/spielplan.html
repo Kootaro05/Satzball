@@ -4,7 +4,7 @@
 <div class="stapel stapel--eng">
   <h1 class="titel titel--m">Spielplan</h1>
   {% if turnier %}
-    <span class="leise">{{ turnier.datum|date:"D, j. M" }} · {{ turnier.ort }} · {% if satz_modus %}{{ turnier.get_gewinnsaetze_display }}{% else %}ein Satz bis {{ turnier.punkte_pro_satz }}{% endif %}</span>
+    <span class="leise">{{ turnier.datum|date:"D, j. M" }} · {{ turnier.ort }} · {% if satz_modus %}{{ turnier.get_gewinnsaetze_display }}{% else %}Punkte-Modus{% endif %}</span>
   {% endif %}
 </div>
 

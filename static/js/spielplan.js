@@ -46,3 +46,18 @@
     markierungWeg();
   });
 })();
+
+// Formular "Spielplan erzeugen": Gruppenwahl nur bei "Gruppen + K.-o." zeigen, Schritte neu nummerieren.
+(function () {
+  var gruppen = document.querySelector("[data-nur-gruppen]");
+  var nummer = document.querySelector("[data-schritt-zeiten]");
+  if (!gruppen || !nummer) return;
+  function aktualisieren() {
+    var gewaehlt = document.querySelector("input[name=modus]:checked");
+    var jederGegenJeden = gewaehlt && gewaehlt.value === "jeder_gegen_jeden";
+    gruppen.hidden = jederGegenJeden;
+    nummer.textContent = jederGegenJeden ? "2" : "3";
+  }
+  document.querySelectorAll("input[name=modus]").forEach(function (r) { r.addEventListener("change", aktualisieren); });
+  aktualisieren();
+})();

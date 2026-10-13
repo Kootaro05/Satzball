@@ -186,6 +186,7 @@ So wenig Daten wie möglich: Name der Spieler, eine E-Mail pro Team. Keine Telef
 | Turnier-Wahl | Besucher können frühere/andere Turniere ansehen | Seite `/turniere/`, Auswahl wird gemerkt |
 | Sichtbarkeit | Orga schaltet jedes Turnier ausdrücklich frei | Feld „öffentlich sichtbar“ (Standard aus); Entwürfe und Testturniere bleiben unsichtbar |
 | Lizenz | Open Source unter AGPL-3.0, © 2026 TetraMedia | Fußzeile verlinkt den Quellcode; App ohne hochschulspezifische Texte |
+| Punkte-Modus | Ohne Zielpunktzahl, mehr Punkte gewinnt | Ersetzt „ein Satz auf X Punkte“; einen Satz bis 25 stellt man als Satz-Modus Best of 1 ein. Kein Unentschieden bleibt |
 
 **Noch offen:**
 

@@ -45,7 +45,8 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
 - Turniermodus pro Turnier: `jeder_gegen_jeden` oder `gruppen_ko`
 - Zählmodus pro Turnier:
   - `saetze`: `gewinnsaetze` 1/2/3 = Best of 1/3/5, `punkte_pro_satz`, `punkte_entscheidungssatz`
-  - `punkte`: ein Satz auf X Punkte (`punkte_pro_satz`), kein Unentschieden
+  - `punkte`: keine Sätze und keine Zielpunktzahl (z. B. auf Zeit), mehr Punkte gewinnt, kein Unentschieden.
+    „Ein Satz bis 25“ ist Satz-Modus mit Best of 1. Im Admin graut `admin_turnier.js` die Satz-Felder aus.
 - Spiel speichert `saetze_a/b` und `punkte_a/b` (Satz-Modus: Ballpunkt-Summe, optional).
   Keine Punkte je Satz (bewusst entschieden).
 - K.-o.-Spiele dürfen ohne Teams angelegt werden; dann zeigen `platzhalter_a/b`
