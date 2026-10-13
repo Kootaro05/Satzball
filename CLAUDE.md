@@ -115,6 +115,13 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
 - Validierung in `Model.clean()`, damit Admin und Formulare sie gemeinsam nutzen.
 - Spielplan- und Tabellenlogik als reine Funktionen mit Unit-Tests.
 
+## Abhängigkeiten und CI
+
+- `requirements.txt` mit **exakten** Versionen. Updates kommen als Dependabot-PR (`.github/dependabot.yml`,
+  monatlich gebündelt; Django bleibt auf LTS 5.2).
+- `.github/workflows/tests.yml` läuft bei jedem PR und Push auf `main`: Docker-Image bauen, Tests im Image,
+  Container starten und Seiten abrufen. Nur mergen, wenn der Lauf grün ist.
+
 ## Befehle
 
 ```bash

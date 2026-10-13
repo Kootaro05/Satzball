@@ -23,3 +23,10 @@ updates:
       interval: "monthly"
     commit-message:
       prefix: "Docker"
+
+  - package-ecosystem: "github-actions"   # Versionen der Actions im Test-Workflow
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "CI"
