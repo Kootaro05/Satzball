@@ -49,7 +49,7 @@ Das MVP deckt genau die vier Kernwünsche ab: Anmeldung, Spielerliste, Spielplan
 - ~~K.-o.-Phase automatisch aus Gruppentabellen befüllen~~ (umgesetzt)
 - Mehrere Felder/Zeitslots automatisch zuweisen
 - Export der Teamliste als CSV (Startgeld-Abrechnung)
-- E-Mail-Erinnerung an Teams, die noch nicht bezahlt haben
+- ~~E-Mail-Erinnerung an Teams, die noch nicht bezahlt haben~~ (umgesetzt, per Knopf)
 
 **Bewusst nicht:** Online-Bezahlung, Nutzerkonten für Spieler, Live-Ticker, Chat, Native App.
 
@@ -176,6 +176,7 @@ So wenig Daten wie möglich: Name der Spieler, eine E-Mail pro Team. Keine Telef
 | Besondere Runden | Erkennbar | Feld `phase` am Spiel (Viertelfinale, Halbfinale, Spiel um Platz 3, Finale) |
 | Team löschen | Auch mit geplanten Spielen | Spielplan wird danach automatisch neu erzeugt (Schritt 4) |
 | Warteliste | Orga entscheidet per Klick, optional automatisch | Reihenfolge nach Anmeldung; Haken „Warteliste automatisch nachrücken lassen“ pro Turnier; Mail an das nachgerückte Team |
+| Unbezahlt nach Meldeschluss | Orga per Knopf: Erinnerung vorher, danach Plätze an die Warteliste | Unbezahlte Teams kommen ans Ende der Warteliste und bekommen eine Mail; nie automatisch (Barzahler) |
 | Umplanen nach Löschen | Offene Spiele neu, Ergebnisse bleiben | Beendete Spiele bleiben stehen; offene Spiele der Gruppe werden neu gepaart und rücken auf |
 | Anzahl Gruppen | Orga wählt 2–4, App schlägt vor | Vorschlag: höchstens 5 Teams pro Gruppe |
 | K.-o. bei 3/4 Gruppen | 3: Gruppensieger + bester Zweiter, 4: Viertelfinale | Platzhalter im Spielplan, Teams trägt die Orga ein |

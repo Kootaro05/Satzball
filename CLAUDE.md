@@ -69,6 +69,9 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
   wenn `Turnier.warteliste_automatisch` gesetzt ist
   (`tournament/warteliste.py`: nach Abmeldung, Absage/Löschen im Admin, mehr Plätzen). Das nachgerückte
   Team bekommt immer eine Mail.
+- Unbezahlt (Kachel im Admin): vor dem Meldeschluss Knopf „Erinnerung schicken“ (`Turnier.zahlungserinnerung_am`),
+  danach Knopf „auf die Warteliste setzen“ – unbezahlte Teams ans **Ende** der Warteliste (`angemeldet_am` = jetzt,
+  alter Zeitpunkt in der Notiz), Mail an sie, danach normales Nachrücken. Beides nur per Knopf, nie automatisch.
 - Zahlungs-Tracking im Admin (Teamliste): Haken "bezahlt" und Zahlungsart direkt in der Liste,
   Kennzahlen aus `Turnier.zahlungsuebersicht()` (erwartet = Gebühr × Teams mit Startplatz),
   Filter "Unbezahlt (mit Startplatz)", Aktion "Von der Warteliste nachrücken".

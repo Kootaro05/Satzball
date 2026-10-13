@@ -1,0 +1,13 @@
+{% autoescape off %}Hallo {{ team.kapitaen_name }},
+
+bis zum Meldeschluss ist für "{{ team.name }}" leider keine Startgebühr bei uns eingegangen. Wie angekündigt geht euer Platz bei {{ turnier.name }} deshalb an die Warteliste.
+
+Ihr steht jetzt auf Platz {{ team.wartelisten_platz }} der Warteliste. Wird wieder ein Platz frei, könnt ihr nachrücken – ihr bekommt dann eine Mail.
+Habt ihr doch schon bezahlt? Dann meldet euch bitte kurz bei uns, dann klären wir das.
+
+Euer Bearbeitungslink:
+{{ link }}
+
+Sportliche Grüße
+eure Orga
+{% endautoescape %}

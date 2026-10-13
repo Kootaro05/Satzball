@@ -158,8 +158,37 @@ class TeamAdmin(admin.ModelAdmin):
         return [
             path("nachruecken/<int:turnier_id>/", self.admin_site.admin_view(self.naechsten_nachruecken),
                  name="tournament_team_naechsten_nachruecken"),
+            path("erinnern/<int:turnier_id>/", self.admin_site.admin_view(self.an_zahlung_erinnern),
+                 name="tournament_team_an_zahlung_erinnern"),
+            path("unbezahlte-warteliste/<int:turnier_id>/", self.admin_site.admin_view(self.unbezahlte_auf_warteliste),
+                 name="tournament_team_unbezahlte_auf_warteliste"),
             *super().get_urls(),
         ]
+
+    def an_zahlung_erinnern(self, request, turnier_id):
+        """Knopf in der Kachel "Unbezahlt" (vor dem Meldeschluss): Erinnerungsmail an alle unbezahlten Teams."""
+        turnier = get_object_or_404(Turnier, pk=turnier_id)
+        if request.method == "POST":
+            anzahl = warteliste.an_zahlung_erinnern(turnier, request)
+            self.message_user(request, f"Erinnerung an {anzahl} Team(s) verschickt.", messages.SUCCESS)
+        return redirect(f"{reverse('admin:tournament_team_changelist')}?turnier__id__exact={turnier.pk}")
+
+    def unbezahlte_auf_warteliste(self, request, turnier_id):
+        """Knopf in der Kachel "Unbezahlt" (nach dem Meldeschluss): Plätze an die Warteliste geben."""
+        turnier = get_object_or_404(Turnier, pk=turnier_id)
+        if request.method == "POST":
+            if not turnier.meldeschluss_vorbei:
+                self.message_user(request, "Erst nach dem Meldeschluss möglich.", messages.WARNING)
+            else:
+                verschoben, nachgerueckt = warteliste.unbezahlte_auf_warteliste(turnier, request)
+                self.message_user(
+                    request, f"{len(verschoben)} unbezahlte(s) Team(s) ans Ende der Warteliste gesetzt, Mail verschickt.",
+                    messages.SUCCESS,
+                )
+                for team in nachgerueckt:
+                    self.message_user(request, f"{team} ist automatisch von der Warteliste nachgerückt (Mail verschickt).",
+                                      messages.SUCCESS)
+        return redirect(f"{reverse('admin:tournament_team_changelist')}?turnier__id__exact={turnier.pk}")
 
     def naechsten_nachruecken(self, request, turnier_id):
         """Knopf in der Kachel "Warteliste": das erste wartende Team auf einen freien Platz holen."""

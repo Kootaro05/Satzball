@@ -58,6 +58,9 @@ class Turnier(models.Model):
     anzahl_felder = models.PositiveSmallIntegerField("Anzahl Felder", default=2)
     slot_minuten = models.PositiveSmallIntegerField("Slotlänge (min)", default=20)
     spielplan_veroeffentlicht = models.BooleanField("Spielplan veröffentlicht", default=False)
+    zahlungserinnerung_am = models.DateTimeField(
+        "zuletzt an Zahlung erinnert", null=True, blank=True, editable=False,
+    )
     warteliste_automatisch = models.BooleanField(
         "Warteliste automatisch nachrücken lassen", default=False,
         help_text="Wird ein Platz frei, rückt das erste Team der Warteliste nach und bekommt eine Mail. "
@@ -118,6 +121,10 @@ class Turnier(models.Model):
     @property
     def freie_plaetze(self):
         return max(self.max_teams - self.belegte_plaetze, 0)
+
+    def unbezahlte_teams(self):
+        """Teams mit Startplatz, deren Startgebühr noch fehlt – in Anmelde-Reihenfolge."""
+        return self.teams.filter(status__in=Team.STARTPLATZ_STATUS, bezahlt=False).order_by(*Team.REIHENFOLGE)
 
     @property
     def warteliste_anzahl(self):
