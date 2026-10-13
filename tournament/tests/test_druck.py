@@ -56,3 +56,13 @@ class DruckansichtTests(TestCase):
         r = self.client.get(self.url)
         self.assertContains(r, f"/spielplan/?turnier={self.t.pk}")
         self.assertContains(self.client.get(f"{reverse('orga_spielplan')}?turnier={self.t.pk}"), "Druckansicht")
+
+
+class FaviconTests(TestCase):
+    def test_admin_und_druckansicht_haben_das_favicon(self):
+        self.assertContains(self.client.get(reverse("admin:login")), "img/logo.svg")
+        self.client.force_login(User.objects.create_superuser("orga", "o@example.de", "x"))
+        self.assertContains(self.client.get(reverse("admin:index")), "img/logo.svg")
+        t = Turnier.objects.create(name="Cup", datum=date(2026, 11, 14), beginn=time(9, 30), ort="Halle", max_teams=8,
+                                   meldeschluss=datetime(2026, 10, 31, tzinfo=timezone.utc))
+        self.assertContains(self.client.get(f"{reverse('orga_spielplan_druck')}?turnier={t.pk}"), "img/logo.svg")
