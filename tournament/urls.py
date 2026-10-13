@@ -14,5 +14,6 @@ urlpatterns = [
     path("team/<str:token>/angemeldet/", views.team_angemeldet, name="team_angemeldet"),
     path("team/<str:token>/abmelden/", views.team_abmelden, name="team_abmelden"),
     path("orga/spielplan/", orga.spielplan_seite, name="orga_spielplan"),
+    path("orga/spielplan/druck/", orga.spielplan_druck, name="orga_spielplan_druck"),
     path("orga/spiel/<int:pk>/", orga.ergebnis_seite, name="orga_ergebnis"),
 ]

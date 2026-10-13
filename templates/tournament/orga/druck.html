@@ -1,0 +1,79 @@
+{% load static %}<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spielplan · {{ turnier.name }}</title>
+  <style>
+    /* Aushang in der Halle: schwarz-weiß, groß, eine A4-Seite. Schrift wie die App (lokal eingebunden). */
+    @font-face { font-family: "Barlow"; font-weight: 500; src: url("{% static 'fonts/barlow-500.woff2' %}") format("woff2"); }
+    @font-face { font-family: "Barlow"; font-weight: 700; src: url("{% static 'fonts/barlow-700.woff2' %}") format("woff2"); }
+    @font-face { font-family: "Barlow Condensed"; font-weight: 800; font-style: italic; src: url("{% static 'fonts/barlow-condensed-800-italic.woff2' %}") format("woff2"); }
+    @page { size: A4 portrait; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; background: #fff; color: #000; font: 500 12.5pt/1.2 "Barlow", system-ui, sans-serif; }
+    .werkzeuge { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; font-size: 11pt; }
+    .werkzeuge button { font: inherit; font-weight: 700; padding: 8px 18px; border: 2px solid #000; border-radius: 8px; background: #fff; cursor: pointer; }
+    h1 { margin: 0; font: italic 800 30pt/1 "Barlow Condensed", sans-serif; text-transform: uppercase; }
+    .unterzeile { margin: 4px 0 14px; font-size: 12pt; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1.5px solid #000; padding: 4px 7px; vertical-align: top; text-align: left; }
+    th { font-size: 11pt; text-transform: uppercase; letter-spacing: .04em; }
+    td.zeit { width: 64px; font-weight: 700; font-size: 15pt; white-space: nowrap; }
+    tr { break-inside: avoid; }
+    .titel { display: block; font-size: 9.5pt; text-transform: uppercase; letter-spacing: .04em; }
+    .teams { display: block; font-weight: 700; font-size: 13pt; }
+    .ko .titel { font-weight: 700; }
+    .gruppen { display: flex; flex-wrap: wrap; gap: 4px 28px; margin-top: 10px; font-size: 11pt; }
+    .gruppen b { text-transform: uppercase; }
+    .fuss { margin-top: 10px; font-size: 9pt; }
+    @media print { body { padding: 0; } .werkzeuge { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="werkzeuge">
+    <button type="button" onclick="window.print()">Drucken</button>
+    <a href="{% url 'orga_spielplan' %}?turnier={{ turnier.pk }}">← zurück zum Spielplan</a>
+    {% if not turnier.spielplan_veroeffentlicht %}<span>Hinweis: Der Spielplan ist noch nicht veröffentlicht.</span>{% endif %}
+  </div>
+
+  <h1>{{ turnier.name }}</h1>
+  <p class="unterzeile">
+    {{ turnier.datum|date:"l, j. F Y" }} · {{ turnier.ort }}
+    {% if zeilen %} · {{ zeilen.0.0|time:"G:i" }} bis ca. {{ ende|time:"G:i" }} Uhr{% endif %}
+    · {% if turnier.zaehlmodus == "saetze" %}{{ turnier.get_gewinnsaetze_display }}{% else %}Punkte-Modus{% endif %}
+  </p>
+
+  {% if zeilen %}
+    <table>
+      <thead><tr><th>Zeit</th>{% for f in felder %}<th>Feld {{ f }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for zeit, zellen in zeilen %}
+          <tr>
+            <td class="zeit">{{ zeit|time:"G:i" }}</td>
+            {% for s in zellen %}
+              <td{% if s and s.phase != "gruppe" %} class="ko"{% endif %}>
+                {% if s %}
+                  <span class="titel">{{ s.titel }}{% if s.schiri_team %} · Schiri: {{ s.schiri_team }}{% endif %}</span>
+                  <span class="teams">{{ s.team_a|default:s.platzhalter_a|default:"?" }} – {{ s.team_b|default:s.platzhalter_b|default:"?" }}</span>
+                {% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Noch kein Spielplan erzeugt.</p>
+  {% endif %}
+
+  {% if gruppen %}
+    <div class="gruppen">
+      {% for gruppe, teams in gruppen %}
+        <span><b>Gruppe {{ gruppe.name }}:</b> {% for t in teams %}{{ t.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <p class="fuss">Stand: {% now "j.n.Y, H:i" %} Uhr{% if turnier.oeffentlich and turnier.spielplan_veroeffentlicht %} · Aktueller Spielplan und Ergebnisse online: {{ request.scheme }}://{{ request.get_host }}{% url 'spielplan' %}?turnier={{ turnier.pk }}{% endif %}</p>
+</body>
+</html>

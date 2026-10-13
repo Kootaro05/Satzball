@@ -92,7 +92,10 @@
 
   <section class="stapel">
     <div class="stapel stapel--eng">
-      <h2 class="zwischen zwischen--l">Vorschau</h2>
+      <div class="kopfzeile">
+        <h2 class="zwischen zwischen--l">Vorschau</h2>
+        {% if zeilen %}<a href="{% url 'orga_spielplan_druck' %}?turnier={{ turnier.pk }}" target="_blank" rel="noopener">Druckansicht →</a>{% endif %}
+      </div>
       <span class="leise klein">Spiel ziehen und auf einem anderen Slot ablegen – die Spiele tauschen. Ein Klick öffnet die Ergebnis-Eingabe.</span>
     </div>
     {% if entscheidungen %}

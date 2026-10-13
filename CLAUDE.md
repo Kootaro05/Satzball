@@ -120,6 +120,8 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
   (im Anmeldeformular Pflicht).
 - Befehle: `testturnier [--teams N] [--spielplan]` (Probelauf), `sicherung [--behalten N]`
   (SQLite-Backup nach `data/sicherungen/`).
+- Druckansicht zum Aushang: `/orga/spielplan/druck/` (eigenständige Seite, schwarz-weiß, A4; Link auf der
+  Orga-Spielplanseite). Ziel: Plan mit bis zu 16 Zeit-Slots auf einer Seite.
 - Ergebnis eintragen: `/orga/spiel/<id>/`, Satz-Modus Sätze (+ optional Ballpunkte gesamt),
   Punkte-Modus Punktzähler.
 - Abweichung vom Design: "Ergebnis eintragen" zeigt im Punkte-Modus Punktzähler
