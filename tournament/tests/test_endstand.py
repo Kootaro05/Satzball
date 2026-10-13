@@ -64,6 +64,16 @@ class EndstandTests(TestCase):
         self.assertContains(r, f"1. {finale.team_b.name}")
         self.assertContains(r, f"3. {platz_3.sieger.name}")
 
+    def test_geloeschtes_team_faellt_raus(self):
+        self.plan(8)
+        for phase in (Phase.GRUPPE, Phase.HALBFINALE, Phase.PLATZ_3, Phase.FINALE):
+            self.alle_beenden(phase)
+        finale = self.t.spiele.get(phase=Phase.FINALE)
+        zweiter = finale.team_b if finale.sieger == finale.team_a else finale.team_a
+        zweiter.delete()
+        self.assertEqual([platz for platz, _ in endstand(self.t)], [1, 3])
+        self.assertNotContains(self.startseite(), "2. <")
+
     def test_jeder_gegen_jeden_erst_wenn_alle_spiele_beendet_sind(self):
         self.t.modus = Turnier.Modus.JEDER_GEGEN_JEDEN
         self.t.save()

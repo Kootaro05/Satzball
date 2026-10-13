@@ -120,7 +120,7 @@ def endstand(turnier):
         platz_3 = next((s for s in spiele if s.phase == Spiel.Phase.PLATZ_3), None)
         if platz_3 and platz_3.sieger:
             plaetze.append((3, platz_3.sieger))
-        return plaetze
+        return [(platz, team) for platz, team in plaetze if team]  # Team nach dem Spiel gelöscht
 
     if not spiele or any(s.status != Spiel.Status.BEENDET for s in spiele):
         return []
