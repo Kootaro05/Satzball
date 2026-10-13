@@ -90,6 +90,15 @@ class AnmeldungTests(TestCase):
         self.assertContains(r, "Mindestens 2 Spieler")
         self.assertFalse(Team.objects.exists())
 
+    def test_weniger_als_empfohlen_ist_erlaubt(self):
+        self.t.min_spieler = 4  # Empfehlung, keine Pflicht
+        self.t.save()
+        r = self.client.post(reverse("anmelden"), anmeldedaten())  # 2 Spieler
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(Team.objects.get().spieler.count(), 2)
+        r = self.client.get(reverse("anmelden"))
+        self.assertContains(r, 'data-pflicht="2" data-empfohlen="4"')
+
     def test_zu_viele_spieler(self):
         spieler = [(f"S{i}", "X") for i in range(5)]
         r = self.client.post(reverse("anmelden"), anmeldedaten(spieler=spieler))

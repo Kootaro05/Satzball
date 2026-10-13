@@ -46,11 +46,22 @@ class OeffentlicherSpielplanTests(TestCase):
         # 2 Gruppen à 3: 3 Gruppen-Slots ab 9:30 à 20 min -> K.-o. ab 10:30
         self.assertContains(r, "ab 10:30 · K.-o.-Runde")
         self.assertContains(r, "Platz 1 und 2 jeder Gruppe ziehen ins Halbfinale ein.")
-        self.assertContains(r, 'id="tabelle"')
+        self.assertContains(r, f'href="{reverse("tabelle")}"')  # Link zur Tabelle
         self.assertNotContains(r, "geheim@example.de")
+        self.assertContains(self.client.get(reverse("startseite")), "Spielplan &amp; Ergebnisse")
+
+        r = self.client.get(reverse("tabelle"))
         tabelle_a = r.context["tabellen"][0][1]
         self.assertEqual(sum(z.s for z in tabelle_a), 1)
-        self.assertContains(self.client.get(reverse("startseite")), "Spielplan &amp; Ergebnisse")
+        self.assertContains(r, "Gruppe B")
+        self.assertContains(r, "SD = Satzdifferenz")
+        self.assertContains(r, "Platz 1 und 2 jeder Gruppe ziehen ins Halbfinale ein.")
+        self.assertNotContains(r, "geheim@example.de")
+
+    def test_tabelle_unveroeffentlicht(self):
+        r = self.client.get(reverse("tabelle"))
+        self.assertContains(r, "sobald der Spielplan veröffentlicht ist")
+        self.assertNotContains(r, "Team 0")
 
     def test_punkte_modus(self):
         self.t.zaehlmodus = Turnier.Zaehlmodus.PUNKTE
@@ -60,7 +71,7 @@ class OeffentlicherSpielplanTests(TestCase):
         spiel.save()
         r = self.client.get(self.url)
         self.assertContains(r, "ein Satz bis 25")
-        self.assertContains(r, "PD = Punktdifferenz")
+        self.assertContains(self.client.get(reverse("tabelle")), "PD = Punktdifferenz")
         self.assertContains(r, "Endstand")
 
     def laeuft(self, jetzt):
@@ -95,7 +106,8 @@ class OeffentlicherSpielplanTests(TestCase):
             r = self.client.get(self.url)
         self.assertFalse(any(slot["laeuft"] for slot in r.context["slots"]))
 
-    def test_navigation(self):
-        r = self.client.get(reverse("startseite"))
-        self.assertContains(r, f'href="{self.url}"')
-        self.assertContains(r, f'href="{self.url}#tabelle"')
+    def test_navigation_markiert_aktuelle_seite(self):
+        for name in ["startseite", "teamliste", "spielplan", "tabelle"]:
+            r = self.client.get(reverse(name))
+            self.assertContains(r, f'<a href="{reverse(name)}" aria-current="page">', html=False)
+            self.assertContains(r, 'aria-current="page"', count=1)

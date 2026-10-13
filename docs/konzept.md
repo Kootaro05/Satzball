@@ -181,6 +181,8 @@ So wenig Daten wie möglich: Name der Spieler, eine E-Mail pro Team. Keine Telef
 | K.-o. bei 3/4 Gruppen | 3: Gruppensieger + bester Zweiter, 4: Viertelfinale | Platzhalter im Spielplan, Teams trägt die Orga ein |
 | Löschfrist | Admin-Aktion per Klick | "Teamdaten löschen" beim Turnier, erst nach dem Turniertag; Teamnamen und Ergebnisse bleiben |
 | Proxy auf dem VPS | Vorhandener nginx | Container nur auf 127.0.0.1, nginx macht HTTPS (siehe `docs/betrieb.md`) |
+| Spielerzahl | Empfohlene Zahl ist keine harte Regel | Pflicht sind mindestens 2 Spieler; darunter lehnt das Formular ab, unter der Empfehlung nur ein Hinweis |
+| Tabelle | Eigene Seite statt unter dem Spielplan | Menüpunkt „Tabelle“ wird aktiv markiert; Menü mit Symbolen |
 
 **Noch offen:**
 

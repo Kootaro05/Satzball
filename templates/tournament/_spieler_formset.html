@@ -1,9 +1,9 @@
 {# Spielerliste als Formset. Erwartet: formset, turnier #}
-<div class="stapel" data-spieler data-min="{{ turnier.min_spieler }}" data-max="{{ turnier.max_spieler }}" data-prefix="{{ formset.prefix }}">
+<div class="stapel" data-spieler data-pflicht="{{ formset.min_pflicht }}" data-empfohlen="{{ turnier.min_spieler }}" data-max="{{ turnier.max_spieler }}" data-prefix="{{ formset.prefix }}">
   {{ formset.management_form }}
   <div class="kopfzeile">
     <h2 class="zwischen">{{ titel|default:"Spieler" }}</h2>
-    <span class="leise"><span data-zaehler>{{ formset.initial_form_count }}</span> von max. {{ turnier.max_spieler }} · min. {{ turnier.min_spieler }}</span>
+    <span class="leise"><span data-zaehler>{{ formset.initial_form_count }}</span> von max. {{ turnier.max_spieler }} · empfohlen {{ turnier.min_spieler }}</span>
   </div>
   {% if formset.non_form_errors %}
     <div class="hinweis hinweis--fehler">{{ formset.non_form_errors|join:" " }}</div>

@@ -6,6 +6,7 @@ urlpatterns = [
     path("", views.startseite, name="startseite"),
     path("teams/", views.teamliste, name="teamliste"),
     path("spielplan/", views.spielplan, name="spielplan"),
+    path("tabelle/", views.tabelle, name="tabelle"),
     path("anmelden/", views.anmelden, name="anmelden"),
     path("datenschutz/", views.datenschutz, name="datenschutz"),
     path("team/<str:token>/", views.team_bearbeiten, name="team_bearbeiten"),

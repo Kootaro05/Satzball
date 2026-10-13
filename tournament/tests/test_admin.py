@@ -81,3 +81,19 @@ class TeamAdminZahlungTests(TestCase):
         self.team("Dritter")  # jetzt 3 von 3 Plätzen belegt
         r = self.nachruecken(self.warte)
         self.assertContains(r, "mehr Teams mit Startplatz als max. Teams")
+
+
+class TurnierAdminTests(TestCase):
+    def test_empfehlung_unter_zwei_wird_abgelehnt(self):
+        self.client.force_login(User.objects.create_superuser("orga", "orga@example.de", "x"))
+        r = self.client.post(reverse("admin:tournament_turnier_add"), {
+            "name": "Cup", "datum": "2026-11-14", "ort": "Halle", "startgebuehr_eur": "20",
+            "meldeschluss_0": "2026-10-31", "meldeschluss_1": "23:59", "max_teams": "10",
+            "min_spieler": "1", "max_spieler": "10", "modus": "gruppen_ko", "anzahl_felder": "2",
+            "slot_minuten": "20", "zaehlmodus": "saetze", "gewinnsaetze": "2",
+            "punkte_pro_satz": "25", "punkte_entscheidungssatz": "15",
+            "gruppen-TOTAL_FORMS": "0", "gruppen-INITIAL_FORMS": "0",
+        })
+        self.assertEqual(r.status_code, 200)  # Formular mit Fehler, nicht gespeichert
+        self.assertContains(r, "weniger Spieler sind nie erlaubt")
+        self.assertFalse(Turnier.objects.exists())

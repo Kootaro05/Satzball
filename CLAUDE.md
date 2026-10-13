@@ -63,6 +63,8 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
 - Zahlungs-Tracking im Admin (Teamliste): Haken "bezahlt" und Zahlungsart direkt in der Liste,
   Kennzahlen aus `Turnier.zahlungsuebersicht()` (erwartet = Gebühr × Teams mit Startplatz),
   Filter "Unbezahlt (mit Startplatz)", Aktion "Von der Warteliste nachrücken".
+- Spielerzahl: Pflicht sind mindestens `MIN_SPIELER` = 2, höchstens `max_spieler`. `min_spieler` am Turnier
+  ist nur eine **Empfehlung** (gelber Hinweis im Formular, keine Ablehnung).
 - Spielernamen sind **öffentlich** (Teamliste). E-Mail und Zahlungsstatus sehen nur Orga und Kapitän.
 - Spiel-Phase (`Spiel.phase`): Gruppenspiel, Viertelfinale, Halbfinale, Spiel um Platz 3, Finale.
   K.-o.-Spiele haben keine Gruppe.
@@ -80,8 +82,9 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
   der Tabelle), offene Spiele der betroffenen Gruppe werden ohne das Team neu gepaart, alle offenen
   Spiele rücken ab dem nächsten freien Slot lückenlos auf, K.-o. danach.
 - Tabelle: `tournament/tabelle.py` (`berechnen`, `gruppentabellen`), zählt nur beendete Gruppenspiele.
-- Öffentlich `/spielplan/` (Screen 05): Spiele nach Uhrzeit und Feld, Ergebnisse, Gruppentabellen
-  (`#tabelle`). "Läuft" = erster Slot mit offenen Spielen, sobald seine Startzeit am Spieltag erreicht ist
+- Öffentlich `/spielplan/` (Screen 05): Spiele nach Uhrzeit und Feld, Ergebnisse. Gruppentabellen auf
+  eigener Seite `/tabelle/` (Abweichung vom Design, damit der Menüpunkt aktiv markiert wird).
+  Untere Navigation mit Inline-SVG-Symbolen. "Läuft" = erster Slot mit offenen Spielen, sobald seine Startzeit am Spieltag erreicht ist
   (folgt dem echten Stand, nicht nur der Uhr). Nur sichtbar, wenn
   `Turnier.spielplan_veroeffentlicht`. Keine E-Mails oder Zahlungsdaten auf öffentlichen Seiten.
 - Datenschutz nach dem Turnier: Admin-Aktion "Teamdaten löschen" (`Turnier.teamdaten_loeschen`), erst nach
