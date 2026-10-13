@@ -8,11 +8,11 @@
   <link rel="stylesheet" href="{% static 'css/satzball.css' %}">
 </head>
 <body>
-  <div class="app">
+  <div class="app{% block app_klasse %}{% endblock %}">
     {% block kopf %}
     <header class="kopf">
       <a class="marke" href="{% url 'startseite' %}">DHSN Volleyball</a>
-      <a class="kopf__link" href="{% url 'admin:index' %}">Orga-Login</a>
+      {% if user.is_staff %}<a class="kopf__link" href="{% url 'orga_spielplan' %}">Orga</a>{% else %}<a class="kopf__link" href="{% url 'admin:index' %}">Orga-Login</a>{% endif %}
     </header>
     {% endblock %}
 

@@ -1,0 +1,5 @@
+<a class="spiel spiel--{{ s.phase }}{% if s.status == "beendet" %} spiel--fertig{% endif %}" href="{% url 'orga_ergebnis' s.pk %}"{% if s.status == "geplant" %} draggable="true" data-spiel="{{ s.pk }}"{% endif %}>
+  <span class="spiel__tag">{{ s.titel }}</span>
+  <span class="spiel__teams">{{ s.team_a|default:s.platzhalter_a|default:"?" }} – {{ s.team_b|default:s.platzhalter_b|default:"?" }}</span>
+  <span class="spiel__sub">{% if s.status == "beendet" %}✓ {% if turnier.zaehlmodus == "saetze" %}{{ s.saetze_a }} : {{ s.saetze_b }}{% else %}{{ s.punkte_a }} : {{ s.punkte_b }}{% endif %}{% elif s.schiri_team %}Schiri: {{ s.schiri_team }}{% endif %}</span>
+</a>

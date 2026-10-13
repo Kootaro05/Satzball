@@ -64,9 +64,22 @@ Umgebungsvariablen (alle optional): `DJANGO_DEBUG` (lokal Standard `1`, im Conta
 - Spielernamen sind **öffentlich** (Teamliste). E-Mail und Zahlungsstatus sehen nur Orga und Kapitän.
 - Spiel-Phase (`Spiel.phase`): Gruppenspiel, Viertelfinale, Halbfinale, Spiel um Platz 3, Finale.
   K.-o.-Spiele haben keine Gruppe.
-- Teams dürfen gelöscht werden, auch mit geplanten Spielen (`SET_NULL` am Spiel).
-  **Offen für Schritt 4:** Danach muss der Spielplan automatisch neu erzeugt werden.
-  Der Generator erstellt den Plan aus Anzahl der Teams und gewähltem Modus.
+- Spielplan (`tournament/spielplan.py`, Orga-Seite `/orga/spielplan/`):
+  - Jeder gegen jeden = eine Gruppe "A". Gruppen + K.-o.: 2–4 Gruppen, Vorschlag max. 5 Teams pro Gruppe,
+    Orga wählt; Teams werden zufällig gelost.
+  - K.-o.: 2 Gruppen → Halbfinale 1. A–2. B, 1. B–2. A; 3 Gruppen → Gruppensieger + bester Zweiter
+    ins Halbfinale; 4 Gruppen → Top 2 ins Viertelfinale. Danach Spiel um Platz 3 und Finale (ein Slot).
+    K.-o.-Spiele haben Platzhalter; die Teams trägt die Orga im Admin ein.
+  - Slots: Startzeit (`Turnier.beginn`) + Index × `slot_minuten`; Gruppen rundenweise verzahnt.
+  - Schiri: bevorzugt das spielfreie Team der Runde, sonst ein Team der Gruppe, das im Slot frei ist.
+    Nach jedem Verschieben werden die Schiris der offenen Spiele neu verteilt (`schiris_neu`).
+  - Neu erzeugen nur, solange es keine Ergebnisse gibt; zieht die Veröffentlichung zurück.
+- Team löschen (im Admin) → `spielplan.umplanen`: Beendete Spiele bleiben (zählen aber nicht mehr in
+  der Tabelle), offene Spiele der betroffenen Gruppe werden ohne das Team neu gepaart, alle offenen
+  Spiele rücken ab dem nächsten freien Slot lückenlos auf, K.-o. danach.
+- Tabelle: `tournament/tabelle.py` (`berechnen`, `gruppentabellen`), zählt nur beendete Gruppenspiele.
+- Ergebnis eintragen: `/orga/spiel/<id>/`, Satz-Modus Sätze (+ optional Ballpunkte gesamt),
+  Punkte-Modus Punktzähler.
 - Abweichung vom Design: "Ergebnis eintragen" zeigt im Punkte-Modus Punktzähler
   (z. B. 25 : 21 mit +/- Buttons) statt Sätzen.
 

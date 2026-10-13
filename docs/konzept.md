@@ -176,6 +176,9 @@ So wenig Daten wie möglich: Name der Spieler, eine E-Mail pro Team. Keine Telef
 | Besondere Runden | Erkennbar | Feld `phase` am Spiel (Viertelfinale, Halbfinale, Spiel um Platz 3, Finale) |
 | Team löschen | Auch mit geplanten Spielen | Spielplan wird danach automatisch neu erzeugt (Schritt 4) |
 | Warteliste | Orga entscheidet per Klick | Kein automatisches Nachrücken bei Absage; Admin-Aktion "Nachrücken" |
+| Umplanen nach Löschen | Offene Spiele neu, Ergebnisse bleiben | Beendete Spiele bleiben stehen; offene Spiele der Gruppe werden neu gepaart und rücken auf |
+| Anzahl Gruppen | Orga wählt 2–4, App schlägt vor | Vorschlag: höchstens 5 Teams pro Gruppe |
+| K.-o. bei 3/4 Gruppen | 3: Gruppensieger + bester Zweiter, 4: Viertelfinale | Platzhalter im Spielplan, Teams trägt die Orga ein |
 
 **Noch offen:**
 

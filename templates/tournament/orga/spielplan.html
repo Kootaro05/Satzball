@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titel %}Spielplan · {{ turnier.name }}{% endblock %}
+{% block app_klasse %} app--breit{% endblock %}
+{% block kopf %}{% include "tournament/orga/_kopf.html" %}{% endblock %}
+{% block nav %}{% endblock %}
+{% block inhalt %}
+<div class="kopfzeile">
+  <div class="stapel stapel--eng">
+    <h1 class="titel titel--m">Spielplan</h1>
+    <span class="leise">{{ turnier.name }} · {{ anzahl_teams }} bestätigte und bezahlte Team{{ anzahl_teams|pluralize:"s" }}</span>
+  </div>
+  {% if turniere|length > 1 %}
+  <form method="get">
+    <select name="turnier" onchange="this.form.submit()" class="auswahl" aria-label="Turnier">
+      {% for t in turniere %}<option value="{{ t.pk }}"{% if t.pk == turnier.pk %} selected{% endif %}>{{ t.name }}</option>{% endfor %}
+    </select>
+  </form>
+  {% endif %}
+</div>
+
+<div class="orga-raster">
+  <section class="stapel">
+    <form method="post" class="karte formular formular--eng">
+      {% csrf_token %}
+      <input type="hidden" name="aktion" value="erzeugen">
+      <input type="hidden" name="turnier" value="{{ turnier.pk }}">
+
+      <div class="stapel">
+        <h2 class="zwischen">1 · Modus</h2>
+        {% for radio in form.modus %}
+          <label class="wahl">
+            {{ radio.tag }}
+            <span><b>{{ radio.choice_label }}</b><br>
+              <span class="leise klein">{% if radio.data.value == "jeder_gegen_jeden" %}Alle Teams in einer Gruppe, jeder gegen jeden.{% else %}Gruppen, jeder gegen jeden, danach K.-o.-Runde mit Spiel um Platz 3 und Finale.{% endif %}</span>
+            </span>
+          </label>
+        {% endfor %}
+      </div>
+
+      <div class="feld">
+        <label for="{{ form.anzahl_gruppen.id_for_label }}">2 · Gruppen (nur bei Gruppen + K.-o.)</label>
+        {{ form.anzahl_gruppen }}
+        <span class="hilfe">2 Gruppen: Top 2 ins Halbfinale · 3 Gruppen: Gruppensieger + bester Zweiter ins Halbfinale · 4 Gruppen: Top 2 ins Viertelfinale</span>
+      </div>
+
+      <div class="kacheln kacheln--lose">
+        <div class="feld">{{ form.beginn.label_tag }}{{ form.beginn }}{{ form.beginn.errors }}</div>
+        <div class="feld">{{ form.slot_minuten.label_tag }}{{ form.slot_minuten }}{{ form.slot_minuten.errors }}</div>
+      </div>
+      <span class="leise klein">{{ turnier.anzahl_felder }} Felder · Schiri: spielfreies Team der Gruppe · Gruppen werden zufällig gelost.</span>
+
+      {% if hat_ergebnisse %}
+        <div class="hinweis hinweis--warnung">Es gibt schon Ergebnisse. Der Plan kann nicht mehr neu erzeugt werden; offene Spiele lassen sich aber noch verschieben.</div>
+      {% else %}
+        <button type="submit" class="btn">{% if anzahl_spiele %}Neu losen und erzeugen{% else %}Spielplan erzeugen{% endif %}</button>
+        {% if turnier.spielplan_veroeffentlicht %}<span class="leise klein mitte">Neu erzeugen zieht die Veröffentlichung zurück.</span>{% endif %}
+      {% endif %}
+    </form>
+
+    {% if anzahl_spiele %}
+    <div class="kacheln">
+      <div class="kachel"><span class="kachel__label">Spiele</span><span class="kachel__wert">{{ anzahl_spiele }}</span></div>
+      <div class="kachel"><span class="kachel__label">Slots</span><span class="kachel__wert">{{ zeilen|length }}</span></div>
+      <div class="kachel"><span class="kachel__label">Start</span><span class="kachel__wert">{{ turnier.beginn|time:"G:i" }}</span></div>
+      <div class="kachel"><span class="kachel__label">Ende ca.</span><span class="kachel__wert">{{ ende|time:"G:i" }}</span></div>
+    </div>
+    <form method="post" class="stapel">
+      {% csrf_token %}
+      <input type="hidden" name="turnier" value="{{ turnier.pk }}">
+      {% if turnier.spielplan_veroeffentlicht %}
+        <div class="hinweis">Der Spielplan ist veröffentlicht.</div>
+        <button type="submit" name="aktion" value="zurueckziehen" class="btn-link">Veröffentlichung zurückziehen</button>
+      {% else %}
+        <button type="submit" name="aktion" value="veroeffentlichen" class="btn">Spielplan veröffentlichen</button>
+      {% endif %}
+    </form>
+    {% endif %}
+
+    {% for gruppe, tabelle in tabellen %}
+      <div class="stapel stapel--eng">
+        <h2 class="zwischen">Gruppe {{ gruppe.name }}</h2>
+        {% include "tournament/_tabelle.html" %}
+      </div>
+    {% endfor %}
+  </section>
+
+  <section class="stapel">
+    <div class="stapel stapel--eng">
+      <h2 class="zwischen zwischen--l">Vorschau</h2>
+      <span class="leise klein">Spiel ziehen und auf einem anderen Slot ablegen – die Spiele tauschen. Ein Klick öffnet die Ergebnis-Eingabe.</span>
+    </div>
+    {% for k in konflikte %}<div class="hinweis hinweis--fehler">{{ k }}</div>{% endfor %}
+    {% if zeilen %}
+      <div class="plan" style="--felder: {{ felder|length }}">
+        <span class="plan__kopf">Zeit</span>
+        {% for f in felder %}<span class="plan__kopf">Feld {{ f }}</span>{% endfor %}
+        {% for zeit, zellen in zeilen %}
+          <span class="plan__zeit">{{ zeit|time:"H:i" }}</span>
+          {% for s in zellen %}
+            {% if s %}
+              {% include "tournament/orga/_spiel.html" %}
+            {% else %}
+              <div class="spiel spiel--leer" data-zeit="{{ zeit|time:"H:i" }}" data-feld="{{ forloop.counter }}"></div>
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="leise">Noch kein Spielplan. Links Modus und Zeiten wählen und erzeugen.</p>
+    {% endif %}
+    {% for s in ohne_zeit %}{% include "tournament/orga/_spiel.html" %}{% endfor %}
+  </section>
+</div>
+
+<form method="post" id="verschieben" hidden>
+  {% csrf_token %}
+  <input type="hidden" name="aktion" value="verschieben">
+  <input type="hidden" name="turnier" value="{{ turnier.pk }}">
+  <input type="hidden" name="spiel">
+  <input type="hidden" name="ziel_spiel">
+  <input type="hidden" name="ziel_zeit">
+  <input type="hidden" name="ziel_feld">
+</form>
+{% endblock %}
+{% block skripte %}<script src="{% static 'js/spielplan.js' %}"></script>{% endblock %}

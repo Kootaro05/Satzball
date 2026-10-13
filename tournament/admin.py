@@ -1,8 +1,11 @@
+from collections import defaultdict
+
 from django.contrib import admin, messages
 from django.db.models import Count
 from django.urls import reverse
 from django.utils.html import format_html
 
+from . import spielplan
 from .models import Gruppe, Spiel, Spieler, Team, Turnier
 
 admin.site.site_header = "Satzball – Orga"
@@ -17,7 +20,9 @@ class GruppeInline(admin.TabularInline):
 
 @admin.register(Turnier)
 class TurnierAdmin(admin.ModelAdmin):
-    list_display = ["name", "datum", "ort", "modus", "zaehlmodus", "anmeldung_offen", "anzahl_teams", "max_teams"]
+    list_display = [
+        "name", "datum", "ort", "modus", "zaehlmodus", "anmeldung_offen", "anzahl_teams", "max_teams", "spielplan_link",
+    ]
     list_filter = ["anmeldung_offen", "modus", "zaehlmodus"]
     search_fields = ["name", "ort"]
     date_hierarchy = "datum"
@@ -25,7 +30,7 @@ class TurnierAdmin(admin.ModelAdmin):
     fieldsets = [
         (None, {"fields": ["name", "datum", "beginn", "ort", "startgebuehr_eur", "zahlungsinfo"]}),
         ("Anmeldung", {"fields": ["anmeldung_offen", "meldeschluss", "max_teams", "min_spieler", "max_spieler"]}),
-        ("Modus", {"fields": ["modus", "anzahl_felder"]}),
+        ("Modus", {"fields": ["modus", "anzahl_felder", "slot_minuten", "spielplan_veroeffentlicht"]}),
         ("Zählweise", {"fields": ["zaehlmodus", "gewinnsaetze", "punkte_pro_satz", "punkte_entscheidungssatz"]}),
     ]
 
@@ -35,6 +40,10 @@ class TurnierAdmin(admin.ModelAdmin):
     @admin.display(description="Teams", ordering="_anzahl_teams")
     def anzahl_teams(self, obj):
         return obj._anzahl_teams
+
+    @admin.display(description="Spielplan")
+    def spielplan_link(self, obj):
+        return format_html('<a href="{}?turnier={}">Spielplan →</a>', reverse("orga_spielplan"), obj.pk)
 
 
 class SpielerInline(admin.TabularInline):
@@ -93,6 +102,19 @@ class TeamAdmin(admin.ModelAdmin):
             extra_context["uebersicht_turnier"] = turnier
             extra_context["uebersicht"] = turnier.zahlungsuebersicht()
         return super().changelist_view(request, extra_context=extra_context)
+
+    # Teams dürfen auch mit geplanten Spielen gelöscht werden; danach wird der Plan automatisch angepasst.
+    def delete_model(self, request, obj):
+        self.delete_queryset(request, Team.objects.filter(pk=obj.pk))
+
+    def delete_queryset(self, request, queryset):
+        betroffen = defaultdict(set)
+        for turnier_id, gruppe_id in queryset.values_list("turnier_id", "gruppe_id"):
+            if gruppe_id:
+                betroffen[turnier_id].add(gruppe_id)
+        super().delete_queryset(request, queryset)
+        for turnier in Turnier.objects.filter(pk__in=betroffen):
+            spielplan.umplanen(turnier, betroffen[turnier.pk])
 
     @admin.action(description="Von der Warteliste nachrücken")
     def nachruecken(self, request, queryset):

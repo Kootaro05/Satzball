@@ -1,0 +1,25 @@
+{# Erwartet: tabelle (Liste von tabelle.Zeile), turnier #}
+<table class="tabelle">
+  <thead>
+    <tr>
+      <th>#</th><th class="tabelle__team">Team</th><th title="Spiele">Sp</th><th title="Siege">S</th>
+      {% if turnier.zaehlmodus == "saetze" %}
+        <th>Sätze</th><th title="Satzdifferenz">SD</th><th title="Ballpunktdifferenz">BD</th>
+      {% else %}
+        <th>Punkte</th><th title="Punktdifferenz">PD</th>
+      {% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for z in tabelle %}
+      <tr>
+        <td>{{ z.platz }}</td><td class="tabelle__team">{{ z.team }}</td><td>{{ z.sp }}</td><td>{{ z.s }}</td>
+        {% if turnier.zaehlmodus == "saetze" %}
+          <td>{{ z.saetze_plus }}:{{ z.saetze_minus }}</td><td>{{ z.sd|stringformat:"+d" }}</td><td>{{ z.pd|stringformat:"+d" }}</td>
+        {% else %}
+          <td>{{ z.punkte_plus }}:{{ z.punkte_minus }}</td><td>{{ z.pd|stringformat:"+d" }}</td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>

@@ -44,6 +44,8 @@ class Turnier(models.Model):
     anmeldung_offen = models.BooleanField("Anmeldung offen", default=False)
     modus = models.CharField(max_length=20, choices=Modus.choices, default=Modus.JEDER_GEGEN_JEDEN)
     anzahl_felder = models.PositiveSmallIntegerField("Anzahl Felder", default=2)
+    slot_minuten = models.PositiveSmallIntegerField("Slotlänge (min)", default=20)
+    spielplan_veroeffentlicht = models.BooleanField("Spielplan veröffentlicht", default=False)
     zaehlmodus = models.CharField("Zählmodus", max_length=10, choices=Zaehlmodus.choices, default=Zaehlmodus.SAETZE)
     gewinnsaetze = models.PositiveSmallIntegerField(
         "Gewinnsätze", choices=Gewinnsaetze.choices, default=Gewinnsaetze.BEST_OF_3,

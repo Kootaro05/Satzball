@@ -1,0 +1,8 @@
+<div class="zaehler">
+  <label class="zaehler__team" for="{{ name }}">{{ team }}</label>
+  <input class="zaehler__wert" type="number" inputmode="numeric" min="0"{% if max %} max="{{ max }}"{% endif %} id="{{ name }}" name="{{ name }}" value="{{ wert|default_if_none:0 }}">
+  <div class="zaehler__knoepfe">
+    <button type="button" data-schritt="-1" aria-label="weniger">−</button>
+    <button type="button" data-schritt="1" aria-label="mehr">+</button>
+  </div>
+</div>
