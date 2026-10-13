@@ -103,7 +103,7 @@ Gespeichert wird nur das Nötigste: Spielernamen und eine E-Mail-Adresse pro Tea
 
 ## 📜 Lizenz
 
-Copyright © 2026 Maxim Stremel
+Copyright © 2026 [TetraMedia](https://tetramedia.de)
 
 Satzball ist Open Source unter der [GNU Affero General Public License v3.0](LICENSE).
 Andere Hochschulen dürfen Satzball nutzen und anpassen. Wer eine veränderte Version als Webseite

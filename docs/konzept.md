@@ -185,7 +185,7 @@ So wenig Daten wie möglich: Name der Spieler, eine E-Mail pro Team. Keine Telef
 | Tabelle | Eigene Seite statt unter dem Spielplan | Menüpunkt „Tabelle“ wird aktiv markiert; Menü mit Symbolen |
 | Turnier-Wahl | Besucher können frühere/andere Turniere ansehen | Seite `/turniere/`, Auswahl wird gemerkt |
 | Sichtbarkeit | Orga schaltet jedes Turnier ausdrücklich frei | Feld „öffentlich sichtbar“ (Standard aus); Entwürfe und Testturniere bleiben unsichtbar |
-| Lizenz | Open Source unter AGPL-3.0, © 2026 Maxim Stremel | Fußzeile verlinkt den Quellcode; App ohne hochschulspezifische Texte |
+| Lizenz | Open Source unter AGPL-3.0, © 2026 TetraMedia | Fußzeile verlinkt den Quellcode; App ohne hochschulspezifische Texte |
 
 **Noch offen:**
 
