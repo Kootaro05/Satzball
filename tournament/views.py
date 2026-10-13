@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -45,10 +45,15 @@ def teamliste(request):
     })
 
 
-def laeuft(turnier, zeit, jetzt):
-    """Ist der Slot `zeit` am Spieltag gerade dran?"""
-    beginn = timezone.make_aware(datetime.combine(turnier.datum, zeit))
-    return beginn <= jetzt < beginn + timedelta(minutes=turnier.slot_minuten)
+def laufender_slot(turnier, slots, jetzt):
+    """Slot, der gerade läuft: der erste mit offenen Spielen – aber erst ab seiner geplanten
+    Startzeit am Spieltag. So folgt die Anzeige dem echten Stand, auch wenn das Turnier hinterherhängt."""
+    for slot in slots:
+        if any(s.status == Spiel.Status.GEPLANT for s in slot["spiele"]):
+            beginn = timezone.make_aware(datetime.combine(turnier.datum, slot["zeit"]))
+            am_spieltag = timezone.localtime(jetzt).date() == turnier.datum
+            return slot["zeit"] if am_spieltag and beginn <= jetzt else None
+    return None
 
 
 def _ko_hinweis(turnier, anzahl_gruppen):
@@ -74,16 +79,18 @@ def spielplan(request):
         fertig = s.status == Spiel.Status.BEENDET and None not in (s.wert_a, s.wert_b)
         s.a_gewinnt = fertig and s.wert_a > s.wert_b
         s.b_gewinnt = fertig and s.wert_b > s.wert_a
-    slots = []
-    for zeit in sorted({s.uhrzeit for s in spiele}):
-        im_slot = sorted((s for s in spiele if s.uhrzeit == zeit), key=lambda s: s.feld)
-        slots.append({"zeit": zeit, "spiele": im_slot, "laeuft": laeuft(turnier, zeit, jetzt)})
+    slots = [
+        {"zeit": zeit, "spiele": sorted((s for s in spiele if s.uhrzeit == zeit), key=lambda s: s.feld)}
+        for zeit in sorted({s.uhrzeit for s in spiele})
+    ]
+    live = laufender_slot(turnier, slots, jetzt)
+    for slot in slots:
+        slot["laeuft"] = slot["zeit"] == live
     tabellen = gruppentabellen(turnier)
     ko = [s for s in spiele if s.phase != Spiel.Phase.GRUPPE]
     return render(request, "tournament/spielplan.html", {
         "turnier": turnier,
         "slots": slots,
-        "felder": range(1, max([turnier.anzahl_felder] + [s.feld for s in spiele]) + 1),
         "tabellen": tabellen,
         "ko_beginn": min((s.uhrzeit for s in ko), default=None),
         "ko_hinweis": _ko_hinweis(turnier, len(tabellen)),
