@@ -7,7 +7,7 @@
   {% if team.status == "warteliste" %}
     <span class="erfolg-icon erfolg-icon--warte" aria-hidden="true">…</span>
     <h1 class="titel titel--m">{{ team.name }}<br>auf der Warteliste</h1>
-    <span class="leise">Eure Anmeldung für {{ turnier.name }} ist eingegangen, aber alle Plätze sind vergeben. Sagt ein Team ab, rückt ihr nach.</span>
+    <span class="leise">Eure Anmeldung für {{ turnier.name }} ist eingegangen. Die Plätze gehen in der Reihenfolge der Anmeldung – ihr steht auf Platz {{ team.wartelisten_platz }} der Warteliste. {% if turnier.warteliste_automatisch %}Wird ein Platz frei, rückt ihr automatisch nach und bekommt eine Mail.{% else %}Wird ein Platz frei, entscheidet die Orga über das Nachrücken – ihr bekommt dann eine Mail.{% endif %}</span>
   {% else %}
     <span class="erfolg-icon" aria-hidden="true">✓</span>
     <h1 class="titel titel--m">{{ team.name }}<br>sind dabei!</h1>

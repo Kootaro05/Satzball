@@ -15,6 +15,13 @@ TEAMNAMEN = [
     "Block Chain", "Lob & Order", "Ace of Bases", "Baggerfahrer", "Mittelblock Mafia",
     "Smash Bros", "Aufschlag Ahoi", "Die Netzroller", "Libero Liebe", "Pritschmeister", "Return 0",
 ]
+# Das erste Testteam ist immer das Team des Satzball-Autors – verewigt im Probelauf.
+TIMBERBORN = {
+    "name": "Timberborn-Volleys",
+    "kapitaen": "Maxim Stremel (Coach)",
+    "spieler": [("Maxim", "Stremel"), ("Leon", "P."), ("Martin", "K."),
+                ("Max", "K."), ("Leon", "S."), ("Oliver", "M.")],
+}
 VORNAMEN = ["Lena", "Max", "Kim", "Jonas", "Mia", "Paul", "Emma", "Noah", "Lea", "Finn", "Sara", "Tom"]
 NACHNAMEN = ["Hoffmann", "Meier", "Nguyen", "Schulz", "Wolf", "Becker", "Krüger", "Yilmaz", "Lange", "Weber"]
 
@@ -31,8 +38,9 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, teams, modus, zaehlmodus, mit_spielplan, **options):
-        if not 2 <= teams <= len(TEAMNAMEN) - 2:
-            raise CommandError(f"--teams muss zwischen 2 und {len(TEAMNAMEN) - 2} liegen.")
+        namen = [TIMBERBORN["name"]] + TEAMNAMEN
+        if not 2 <= teams <= len(namen) - 2:
+            raise CommandError(f"--teams muss zwischen 2 und {len(namen) - 2} liegen.")
         jetzt = timezone.localtime()
         beginn = (jetzt + timedelta(minutes=30 - jetzt.minute % 30)).time().replace(second=0, microsecond=0)
         turnier = Turnier.objects.create(
@@ -43,14 +51,18 @@ class Command(BaseCommand):
         )
         zufall = random.Random()
         # Teams mit Startplatz: die ersten `teams` bezahlt, zwei weitere offen (zum Testen des Zahlungs-Trackings)
-        for i, name in enumerate(TEAMNAMEN[:teams + 2]):
+        for i, name in enumerate(namen[:teams + 2]):
             team = Team.objects.create(
-                turnier=turnier, name=name, kapitaen_name=f"Kapitän {i + 1}",
+                turnier=turnier, name=name,
+                kapitaen_name=TIMBERBORN["kapitaen"] if i == 0 else f"Kapitän {i + 1}",
                 kapitaen_email=f"team{i + 1}@example.invalid", bezahlt=i < teams,
                 zahlungsart=Team.Zahlungsart.BAR if i < teams else "",
             )
-            for _ in range(6):
-                Spieler.objects.create(team=team, vorname=zufall.choice(VORNAMEN), nachname=zufall.choice(NACHNAMEN))
+            spieler = TIMBERBORN["spieler"] if i == 0 else [
+                (zufall.choice(VORNAMEN), zufall.choice(NACHNAMEN)) for _ in range(6)
+            ]
+            for vorname, nachname in spieler:
+                Spieler.objects.create(team=team, vorname=vorname, nachname=nachname)
 
         self.stdout.write(f"Turnier „{turnier}“ (id {turnier.pk}) mit {teams} bezahlten und 2 offenen Teams angelegt.")
         if mit_spielplan:

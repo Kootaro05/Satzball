@@ -13,6 +13,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from . import spielplan as plan
+from . import warteliste
 from .forms import AnmeldeForm, spieler_formset
 from .models import Spiel, Spieler, Team, Turnier
 from .tabelle import gruppentabellen
@@ -47,8 +48,8 @@ def _sichtbare_teams(turnier):
     """Teams für öffentliche Listen: ohne Absagen, Startplätze vor Warteliste."""
     teams = turnier.teams.exclude(status=Team.Status.ABGESAGT).prefetch_related(
         Prefetch("spieler", queryset=Spieler.objects.order_by("nachname", "vorname"))
-    ).order_by("pk")
-    return sorted(teams, key=lambda t: not t.hat_startplatz)
+    ).order_by(*Team.REIHENFOLGE)
+    return sorted(teams, key=lambda t: not t.hat_startplatz)  # stabil: innerhalb bleibt die Anmelde-Reihenfolge
 
 
 def startseite(request):
@@ -148,10 +149,14 @@ def anmelden(request):
     formset = SpielerFormSet(request.POST or None, turnier=turnier, prefix="spieler")
 
     if request.method == "POST" and form.is_valid() and formset.is_valid():
+        # Erst freie Plätze an die Wartenden (mit Haken), dann entscheidet sich der Status des neuen Teams –
+        # so überholt niemand die Warteliste und das neue Team bekommt genau eine Mail.
+        warteliste.auffuellen(turnier, request)
         with transaction.atomic():
             team = form.save(commit=False)
             team.turnier = turnier
-            team.status = Team.Status.ANGEMELDET if turnier.freie_plaetze else Team.Status.WARTELISTE
+            # Wer zuerst kommt: Wartet schon jemand, stellt sich das neue Team hinten an
+            team.status = Team.Status.WARTELISTE if turnier.neue_auf_warteliste else Team.Status.ANGEMELDET
             team.save()
             formset.instance = team
             formset.save()
@@ -204,4 +209,5 @@ def team_abmelden(request, token):
         team.status = Team.Status.ABGESAGT
         team.save()
         messages.success(request, "Euer Team ist abgemeldet.")
+        warteliste.auffuellen(team.turnier, request)
     return redirect("team_bearbeiten", token=token)

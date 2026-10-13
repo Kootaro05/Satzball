@@ -1,0 +1,17 @@
+{% autoescape off %}Hallo {{ team.kapitaen_name }},
+
+kurze Erinnerung: Für "{{ team.name }}" ist die Startgebühr für {{ turnier.name }} noch nicht bei uns eingegangen.
+
+Startgebühr: {{ turnier.startgebuehr_eur|floatformat:"-2" }} €
+Bitte bis zum Meldeschluss am {{ turnier.meldeschluss|date:"j.n.Y, H:i" }} Uhr zahlen – danach geht euer Platz an die Warteliste.
+{% if turnier.zahlungsinfo %}
+{{ turnier.zahlungsinfo }}
+Verwendungszweck: {{ turnier.name }} – {{ team.name }}
+{% endif %}
+Habt ihr schon bezahlt? Dann ist alles gut – wir tragen es bald ein.
+Könnt ihr doch nicht mitspielen? Dann meldet euch bitte über euren Bearbeitungslink ab, damit ein Team von der Warteliste nachrücken kann:
+{{ link }}
+
+Sportliche Grüße
+eure Orga
+{% endautoescape %}

@@ -1,14 +1,21 @@
 from collections import defaultdict
 
 from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.template.response import TemplateResponse
 from django.utils import timezone
-from django.urls import reverse
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import path, reverse
 from django.utils.html import format_html
 
-from . import ko, spielplan
+from . import ko, spielplan, warteliste
 from .models import Gruppe, Spiel, Spieler, Team, Turnier
+
+def _mail_hinweis(team):
+    """Für Meldungen: ging die Mail an das Team wirklich raus?"""
+    return "Mail verschickt" if getattr(team, "mail_verschickt", False) else "keine Mail – E-Mail-Adresse fehlt"
+
 
 admin.site.site_header = "Satzball – Orga"
 admin.site.site_title = "Satzball"
@@ -37,7 +44,9 @@ class TurnierAdmin(admin.ModelAdmin):
         js = ["js/admin_turnier.js"]  # Satz-Felder im Punkte-Modus ausgrauen
     fieldsets = [
         (None, {"fields": ["name", "oeffentlich", "datum", "beginn", "ort", "startgebuehr_eur", "zahlungsinfo"]}),
-        ("Anmeldung", {"fields": ["anmeldung_offen", "meldeschluss", "max_teams", "min_spieler", "max_spieler"]}),
+        ("Anmeldung", {"fields": [
+            "anmeldung_offen", "meldeschluss", "max_teams", "warteliste_automatisch", "min_spieler", "max_spieler",
+        ]}),
         ("Modus", {"fields": ["modus", "anzahl_felder", "slot_minuten", "spielplan_veroeffentlicht"]}),
         ("Zählweise", {"fields": ["zaehlmodus", "gewinnsaetze", "punkte_pro_satz", "punkte_entscheidungssatz"]}),
         ("Datenschutz", {"fields": ["teamdaten_geloescht_am"]}),
@@ -49,6 +58,13 @@ class TurnierAdmin(admin.ModelAdmin):
     @admin.display(description="Teams", ordering="_anzahl_teams")
     def anzahl_teams(self, obj):
         return obj._anzahl_teams
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        # Mehr Plätze oder Haken gerade gesetzt: Warteliste sofort nachrücken lassen
+        for team in warteliste.auffuellen(obj, request):
+            self.message_user(request, f"{team} ist automatisch von der Warteliste nachgerückt ({_mail_hinweis(team)}).",
+                              messages.SUCCESS)
 
     @admin.action(description="Teamdaten löschen (Datenschutz)")
     def teamdaten_loeschen(self, request, queryset):
@@ -104,9 +120,10 @@ class ZahlungFilter(admin.SimpleListFilter):
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
     list_display = [
-        "name", "kapitaen_name", "turnier", "anzahl_spieler", "status",
-        "bezahlt", "bezahlt_am", "zahlungsart", "gruppe",
+        "name", "kapitaen_name", "turnier", "anzahl_spieler", "status", "wartelisten_platz",
+        "bezahlt", "bezahlt_am", "zahlungsart", "gruppe", "angemeldet_am",
     ]
+    ordering = ["turnier", *Team.REIHENFOLGE]  # wer zuerst kommt, steht oben
     list_filter = ["turnier", "status", ZahlungFilter, "zahlungsart"]
     list_editable = ["bezahlt", "zahlungsart"]
     show_facets = admin.ShowFacets.ALWAYS
@@ -136,7 +153,73 @@ class TeamAdmin(admin.ModelAdmin):
         if turnier:
             extra_context["uebersicht_turnier"] = turnier
             extra_context["uebersicht"] = turnier.zahlungsuebersicht()
+            extra_context["freie_plaetze"] = turnier.freie_plaetze
+            if not turnier.warteliste_automatisch and turnier.freie_plaetze:
+                extra_context["naechster_wartend"] = (
+                    turnier.teams.filter(status=Team.Status.WARTELISTE).order_by(*Team.REIHENFOLGE).first()
+                )
         return super().changelist_view(request, extra_context=extra_context)
+
+    def get_urls(self):
+        return [
+            path("nachruecken/<int:turnier_id>/", self.admin_site.admin_view(self.naechsten_nachruecken),
+                 name="tournament_team_naechsten_nachruecken"),
+            path("erinnern/<int:turnier_id>/", self.admin_site.admin_view(self.an_zahlung_erinnern),
+                 name="tournament_team_an_zahlung_erinnern"),
+            path("unbezahlte-warteliste/<int:turnier_id>/", self.admin_site.admin_view(self.unbezahlte_auf_warteliste),
+                 name="tournament_team_unbezahlte_auf_warteliste"),
+            *super().get_urls(),
+        ]
+
+    def _knopf_turnier(self, request, turnier_id):
+        """Für die Knöpfe in den Kacheln: Turnier holen; nur wer Teams ändern darf, darf sie auslösen."""
+        if not self.has_change_permission(request):
+            raise PermissionDenied
+        return get_object_or_404(Turnier, pk=turnier_id)
+
+    def an_zahlung_erinnern(self, request, turnier_id):
+        """Knopf in der Kachel "Unbezahlt" (vor dem Meldeschluss): Erinnerungsmail an alle unbezahlten Teams."""
+        turnier = self._knopf_turnier(request, turnier_id)
+        if request.method == "POST":
+            anzahl = warteliste.an_zahlung_erinnern(turnier, request)
+            self.message_user(request, f"Erinnerung an {anzahl} Team(s) verschickt.", messages.SUCCESS)
+        return redirect(f"{reverse('admin:tournament_team_changelist')}?turnier__id__exact={turnier.pk}")
+
+    def unbezahlte_auf_warteliste(self, request, turnier_id):
+        """Knopf in der Kachel "Unbezahlt" (nach dem Meldeschluss): Plätze an die Warteliste geben."""
+        turnier = self._knopf_turnier(request, turnier_id)
+        if request.method == "POST":
+            if not turnier.meldeschluss_vorbei:
+                self.message_user(request, "Erst nach dem Meldeschluss möglich.", messages.WARNING)
+            else:
+                verschoben, nachgerueckt = warteliste.unbezahlte_auf_warteliste(turnier, request)
+                mails = sum(1 for t in verschoben if t.mail_verschickt)
+                self.message_user(
+                    request, f"{len(verschoben)} unbezahlte(s) Team(s) ans Ende der Warteliste gesetzt, "
+                             f"{mails} Mail(s) verschickt.",
+                    messages.SUCCESS,
+                )
+                for team in nachgerueckt:
+                    self.message_user(request, f"{team} ist automatisch von der Warteliste nachgerückt ({_mail_hinweis(team)}).",
+                                      messages.SUCCESS)
+        return redirect(f"{reverse('admin:tournament_team_changelist')}?turnier__id__exact={turnier.pk}")
+
+    def naechsten_nachruecken(self, request, turnier_id):
+        """Knopf in der Kachel "Warteliste": das erste wartende Team auf einen freien Platz holen."""
+        turnier = self._knopf_turnier(request, turnier_id)
+        zurueck = f"{reverse('admin:tournament_team_changelist')}?turnier__id__exact={turnier.pk}"
+        if request.method != "POST":
+            return redirect(zurueck)
+        team = turnier.teams.filter(status=Team.Status.WARTELISTE).order_by(*Team.REIHENFOLGE).first()
+        if team is None:
+            self.message_user(request, "Niemand steht auf der Warteliste.", messages.WARNING)
+        elif not turnier.freie_plaetze:
+            self.message_user(request, "Kein Platz frei – erst beim Turnier mehr Plätze einstellen.", messages.WARNING)
+        else:
+            warteliste.nachruecken(team, request)
+            self.message_user(request, f"{team} ist von der Warteliste nachgerückt ({_mail_hinweis(team)}).",
+                              messages.SUCCESS)
+        return redirect(zurueck)
 
     # Teams dürfen auch mit geplanten Spielen gelöscht werden; danach wird der Plan automatisch angepasst.
     def delete_model(self, request, obj):
@@ -147,16 +230,17 @@ class TeamAdmin(admin.ModelAdmin):
         for turnier_id, gruppe_id in queryset.values_list("turnier_id", "gruppe_id"):
             if gruppe_id:
                 betroffen[turnier_id].add(gruppe_id)
+        turnier_ids = set(queryset.values_list("turnier_id", flat=True))
         super().delete_queryset(request, queryset)
         for turnier in Turnier.objects.filter(pk__in=betroffen):
             spielplan.umplanen(turnier, betroffen[turnier.pk])
+        self._auffuellen(request, Turnier.objects.filter(pk__in=turnier_ids))
 
     @admin.action(description="Von der Warteliste nachrücken")
     def nachruecken(self, request, queryset):
-        nachgerueckt = 0
-        for team in queryset.filter(status=Team.Status.WARTELISTE).select_related("turnier"):
-            team.status = Team.Status.ANGEMELDET
-            team.save()
+        nachgerueckt = mails = 0
+        for team in queryset.filter(status=Team.Status.WARTELISTE).select_related("turnier").order_by(*Team.REIHENFOLGE):
+            mails += warteliste.nachruecken(team, request)  # setzt den Status und schickt die Mail
             nachgerueckt += 1
             if team.turnier.belegte_plaetze > team.turnier.max_teams:
                 self.message_user(
@@ -164,13 +248,30 @@ class TeamAdmin(admin.ModelAdmin):
                     f"({team.turnier.belegte_plaetze} von {team.turnier.max_teams}).", messages.WARNING,
                 )
         if nachgerueckt:
-            self.message_user(request, f"{nachgerueckt} Team(s) von der Warteliste nachgerückt.", messages.SUCCESS)
+            self.message_user(request, f"{nachgerueckt} Team(s) von der Warteliste nachgerückt, {mails} Mail(s) verschickt.",
+                              messages.SUCCESS)
         else:
             self.message_user(request, "Keines der gewählten Teams steht auf der Warteliste.", messages.WARNING)
 
     @admin.display(description="Spieler", ordering="_anzahl_spieler")
     def anzahl_spieler(self, obj):
         return obj._anzahl_spieler
+
+    @admin.display(description="Warteliste", ordering="angemeldet_am")
+    def wartelisten_platz(self, obj):
+        return f"#{obj.wartelisten_platz}" if obj.wartelisten_platz else ""
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        # Von der Orga gerade auf die Warteliste gesetzt: nicht im selben Moment wieder nachrücken lassen
+        zurueckgestuft = change and obj.status == Team.Status.WARTELISTE and form.initial.get("status") != obj.status
+        self._auffuellen(request, [obj.turnier], ausser=obj if zurueckgestuft else None)
+
+    def _auffuellen(self, request, turniere, ausser=None):
+        for turnier in turniere:
+            for team in warteliste.auffuellen(turnier, request, ausser=ausser):
+                self.message_user(request, f"{team} ist automatisch von der Warteliste nachgerückt ({_mail_hinweis(team)}).",
+                                  messages.SUCCESS)
 
     @admin.display(description="Bearbeitungslink")
     def bearbeitungslink(self, obj):

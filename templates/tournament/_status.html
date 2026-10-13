@@ -1,1 +1,1 @@
-<span class="badge badge--{{ team.status }}{% if gross %} badge--gross{% endif %}">{% if prefix %}{{ prefix }}{% endif %}{{ team.get_status_display }}</span>
+<span class="badge badge--{{ team.status }}{% if gross %} badge--gross{% endif %}">{% if prefix %}{{ prefix }}{% endif %}{{ team.get_status_display }}{% if team.wartelisten_platz %} · {{ team.wartelisten_platz }}{% endif %}</span>
