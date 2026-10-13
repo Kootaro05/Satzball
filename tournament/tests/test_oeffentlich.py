@@ -1,4 +1,5 @@
 from datetime import datetime, time, timedelta
+from unittest.mock import patch
 
 from django.test import TestCase
 from django.urls import reverse
@@ -6,7 +7,6 @@ from django.utils import timezone
 
 from tournament import spielplan
 from tournament.models import Spiel, Team, Turnier
-from tournament.views import laeuft
 
 
 class OeffentlicherSpielplanTests(TestCase):
@@ -43,7 +43,8 @@ class OeffentlicherSpielplanTests(TestCase):
         self.assertContains(r, "noch offen")
         self.assertContains(r, "Halbfinale 1")
         self.assertContains(r, "1. Gruppe A")
-        self.assertContains(r, "ab ")  # K.-o.-Hinweis
+        # 2 Gruppen à 3: 3 Gruppen-Slots ab 9:30 à 20 min -> K.-o. ab 10:30
+        self.assertContains(r, "ab 10:30 · K.-o.-Runde")
         self.assertContains(r, "Platz 1 und 2 jeder Gruppe ziehen ins Halbfinale ein.")
         self.assertContains(r, 'id="tabelle"')
         self.assertNotContains(r, "geheim@example.de")
@@ -62,12 +63,37 @@ class OeffentlicherSpielplanTests(TestCase):
         self.assertContains(r, "PD = Punktdifferenz")
         self.assertContains(r, "Endstand")
 
-    def test_laeuft(self):
+    def laeuft(self, jetzt):
+        """Uhrzeit des Slots mit "Läuft" (oder None) für einen Zeitpunkt am Spieltag."""
         tz = timezone.get_current_timezone()
-        start = timezone.make_aware(datetime.combine(self.t.datum, time(9, 30)), tz)
-        self.assertTrue(laeuft(self.t, time(9, 30), start + timedelta(minutes=5)))
-        self.assertFalse(laeuft(self.t, time(9, 30), start + timedelta(minutes=20)))
-        self.assertFalse(laeuft(self.t, time(9, 30), start - timedelta(days=1)))
+        moment = timezone.make_aware(datetime.combine(self.t.datum, jetzt), tz)
+        with patch("tournament.views.timezone.now", return_value=moment):
+            r = self.client.get(self.url)
+        return next((slot["zeit"] for slot in r.context["slots"] if slot["laeuft"]), None)
+
+    def beenden(self, zeit):
+        for s in self.t.spiele.filter(uhrzeit=zeit):
+            s.status, s.saetze_a, s.saetze_b = Spiel.Status.BEENDET, 2, 0
+            s.save()
+
+    def test_laeuft_folgt_dem_echten_stand(self):
+        self.veroeffentlichen()
+        self.assertIsNone(self.laeuft(time(9, 0)))              # vor dem Start
+        self.assertEqual(self.laeuft(time(9, 35)), time(9, 30))
+        # Turnier hängt hinterher: um 10:15 ist Slot 1 noch nicht fertig -> Slot 1 läuft
+        self.assertEqual(self.laeuft(time(10, 15)), time(9, 30))
+        self.beenden(time(9, 30))
+        self.assertEqual(self.laeuft(time(10, 15)), time(9, 50))
+        # Slot 1 fertig, aber Slot 2 hat noch nicht begonnen -> nichts läuft
+        self.assertIsNone(self.laeuft(time(9, 45)))
+
+    def test_laeuft_nur_am_spieltag(self):
+        self.veroeffentlichen()
+        tz = timezone.get_current_timezone()
+        am_tag_davor = timezone.make_aware(datetime.combine(self.t.datum - timedelta(days=1), time(9, 35)), tz)
+        with patch("tournament.views.timezone.now", return_value=am_tag_davor):
+            r = self.client.get(self.url)
+        self.assertFalse(any(slot["laeuft"] for slot in r.context["slots"]))
 
     def test_navigation(self):
         r = self.client.get(reverse("startseite"))
