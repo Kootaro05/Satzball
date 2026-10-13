@@ -30,6 +30,32 @@ def _spiele(turnier):
     return spielplan.mit_titeln(turnier)
 
 
+def _raster(turnier, spiele):
+    """Spielplan als Raster: ([(uhrzeit, [Spiel oder None je Feld])], Feldnummern, Ende des letzten Slots)."""
+    zeiten = sorted({s.uhrzeit for s in spiele if s.uhrzeit})
+    felder = list(range(1, max([turnier.anzahl_felder] + [s.feld for s in spiele]) + 1))
+    belegung = {(s.uhrzeit, s.feld): s for s in spiele}
+    ende = (datetime.combine(turnier.datum, zeiten[-1]) + timedelta(minutes=turnier.slot_minuten)).time() if zeiten else None
+    return [(z, [belegung.get((z, f)) for f in felder]) for z in zeiten], felder, ende
+
+
+@staff_member_required
+def spielplan_druck(request):
+    """Druckansicht zum Aushängen in der Halle (auch vor der Veröffentlichung)."""
+    turnier = _turnier(request)
+    if not turnier:
+        return redirect("orga_spielplan")
+    spiele = _spiele(turnier)
+    zeilen, felder, ende = _raster(turnier, spiele)
+    return render(request, "tournament/orga/druck.html", {
+        "turnier": turnier,
+        "zeilen": zeilen,
+        "felder": felder,
+        "ende": ende,
+        "gruppen": [(g, list(g.teams.order_by("name"))) for g in turnier.gruppen.order_by("name")],
+    })
+
+
 @staff_member_required
 def spielplan_seite(request):
     turnier = _turnier(request)
@@ -75,10 +101,7 @@ def spielplan_seite(request):
             return redirect(hier)
 
     spiele = _spiele(turnier)
-    zeiten = sorted({s.uhrzeit for s in spiele if s.uhrzeit})
-    felder = list(range(1, max([turnier.anzahl_felder] + [s.feld for s in spiele]) + 1))
-    belegung = {(s.uhrzeit, s.feld): s for s in spiele}
-    ende = (datetime.combine(turnier.datum, zeiten[-1]) + timedelta(minutes=turnier.slot_minuten)).time() if zeiten else None
+    zeilen, felder, ende = _raster(turnier, spiele)
 
     return render(request, "tournament/orga/spielplan.html", {
         "turnier": turnier,
@@ -86,7 +109,7 @@ def spielplan_seite(request):
         "form": form,
         "anzahl_teams": anzahl_teams,
         "hat_ergebnisse": any(s.status == Spiel.Status.BEENDET for s in spiele),
-        "zeilen": [(z, [belegung.get((z, f)) for f in felder]) for z in zeiten],
+        "zeilen": zeilen,
         "felder": felder,
         "anzahl_spiele": len(spiele),
         "ende": ende,
