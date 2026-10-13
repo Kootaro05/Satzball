@@ -112,6 +112,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # AGPL-3.0: Nutzer der Webseite müssen an den Quellcode kommen (Link in der Fußzeile).
 QUELLCODE_URL = os.environ.get("SATZBALL_QUELLCODE_URL", "https://github.com/Kootaro05/Satzball")
 
+# Datenschutzerklärung, Abschnitt "Verantwortlicher": Zeilen durch "|" getrennt, z. B.
+# "Name | Straße 1 | 12345 Ort | E-Mail: mail@example.de". Betreiber-spezifisch, deshalb nicht im Code.
+VERANTWORTLICHER = [
+    zeile.strip() for zeile in os.environ.get("SATZBALL_VERANTWORTLICHER", "").split("|") if zeile.strip()
+]
+
 # E-Mail (nur für den Bearbeitungslink). Ohne EMAIL_HOST landen Mails im Log/der Konsole.
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
 if EMAIL_HOST:

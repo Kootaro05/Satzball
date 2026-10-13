@@ -1,23 +1,57 @@
 {% extends "base.html" %}
-{% block titel %}Datenschutzhinweise · Satzball{% endblock %}
+{% block titel %}Datenschutzerklärung · Satzball{% endblock %}
 {% block inhalt %}
-<h1 class="titel titel--m">Datenschutz&shy;hinweise</h1>
+<h1 class="titel titel--m">Datenschutz&shy;erklärung</h1>
 <div class="text">
-  {# ENTWURF – vor dem ersten echten Turnier prüfen lassen (offener Punkt in docs/konzept.md). #}
-  <p>Wir speichern nur, was wir für das Turnier brauchen.</p>
-  <h2>Was wir speichern</h2>
+  {# Verantwortlicher kommt aus SATZBALL_VERANTWORTLICHER (Betreiber-spezifisch, nicht im Code). #}
+  <p>Wir nehmen den Schutz eurer Daten ernst und speichern nur das, was wir für die Organisation des Turniers wirklich brauchen.</p>
+
+  <h2>1. Verantwortlicher für die Datenverarbeitung</h2>
+  <p>Verantwortlich im Sinne der Datenschutzgesetze ist:</p>
+  {% if verantwortlicher %}
+    <p>{% for zeile in verantwortlicher %}{{ zeile|urlize }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</p>
+  {% else %}
+    <div class="hinweis hinweis--warnung">Hinweis für den Betreiber: Bitte den Verantwortlichen in <code>SATZBALL_VERANTWORTLICHER</code> eintragen (siehe <code>docs/betrieb.md</code>).</div>
+  {% endif %}
+
+  <h2>2. Hosting und Server-Logfiles</h2>
+  <p>Wenn ihr unsere WebApp aufruft, erhebt und speichert der Provider der Seiten automatisch Informationen in so genannten Server-Log-Dateien, die euer Browser automatisch an uns übermittelt. Das sind z.&nbsp;B. Browsertyp/-version, verwendetes Betriebssystem, Referrer URL, Hostname des zugreifenden Rechners, Uhrzeit der Serveranfrage und die IP-Adresse. Eine Zusammenführung dieser Daten mit anderen Datenquellen wird nicht vorgenommen. Die Log-Dateien werden nach 14 Tagen automatisch gelöscht. Die Erfassung erfolgt zur Sicherstellung eines fehlerfreien Betriebs der Seite (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO).</p>
+
+  <h2>3. Was wir speichern und wofür</h2>
+  <p>Für die Anmeldung und Durchführung des Turniers erfassen wir folgende Daten:</p>
   <ul>
-    <li>Teamname und Vor- und Nachnamen der Spieler</li>
+    <li>Teamname sowie Vor- und Nachnamen der Spieler</li>
     <li>Name und E-Mail-Adresse des Kapitäns</li>
     <li>Zahlungsstatus der Startgebühr (bezahlt, Datum, Zahlungsart)</li>
   </ul>
-  <h2>Wer was sieht</h2>
-  <p>Öffentlich sichtbar sind Teamnamen, die Namen der Spieler, Spielplan und Ergebnisse. Die E-Mail-Adresse und den Zahlungsstatus sehen nur die Orga und der eigene Kapitän.</p>
-  <h2>Wofür</h2>
-  <p>Die E-Mail-Adresse nutzen wir nur, um den Bearbeitungslink zu schicken und bei Fragen zum Turnier Kontakt aufzunehmen.</p>
-  <h2>Cookies</h2>
-  <p>Wir setzen nur technisch notwendige Cookies: für Formulare (Schutz vor Missbrauch) und, wenn du ein anderes Turnier auswählst, um dir diese Auswahl zu merken. Keine Analyse, keine Werbung.</p>
-  <h2>Wie lange</h2>
-  <p>Teams und Spieler werden einige Monate nach dem Turnier gelöscht. Ergebnisse dürfen bleiben.</p>
+  <p>Die E-Mail-Adresse nutzen wir ausschließlich, um den Bearbeitungslink zu schicken und bei Fragen zum Turnier Kontakt mit euch aufzunehmen. (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO – Vertragserfüllung bzw. vorvertragliche Maßnahmen).</p>
+
+  <h2>4. Wer was sieht</h2>
+  <ul>
+    <li><b>Öffentlich sichtbar:</b> Teamnamen, die Vor- und Nachnamen der Spieler, der Spielplan und die Ergebnisse.</li>
+    <li><b>Nicht öffentlich:</b> Die E-Mail-Adresse und den genauen Zahlungsstatus sehen nur die Turnier-Orga und der eigene Kapitän.</li>
+  </ul>
+
+  <h2>5. Cookies</h2>
+  <p>Wir setzen ausschließlich technisch notwendige Cookies ein:</p>
+  <ul>
+    <li>Für Formulare (zum Schutz vor Missbrauch).</li>
+    <li>Wenn du ein anderes Turnier auswählst, um dir diese Auswahl für die Sitzung zu merken.</li>
+  </ul>
+  <p>Es gibt bei uns kein Tracking, keine Analyse-Tools und keine Werbung. (Rechtsgrundlage: § 25 Abs. 2 TDDDG i.&nbsp;V.&nbsp;m. Art. 6 Abs. 1 lit. f DSGVO).</p>
+
+  <h2>6. Wie lange wir Daten speichern</h2>
+  <p>Die personenbezogenen Daten der Teams und Spieler (wie Namen und E-Mails) werden einige Monate nach Abschluss des Turniers gelöscht, sobald sie für die Abwicklung nicht mehr benötigt werden. Die rein sportlichen Ergebnisse und Teamnamen dürfen als Historie bestehen bleiben.</p>
+
+  <h2>7. Eure Rechte</h2>
+  <p>Ihr habt jederzeit das Recht:</p>
+  <ul>
+    <li>Unentgeltlich Auskunft über Herkunft, Empfänger und Zweck eurer gespeicherten personenbezogenen Daten zu erhalten.</li>
+    <li>Die Berichtigung oder Löschung dieser Daten zu verlangen.</li>
+    <li>Die Einschränkung der Verarbeitung zu fordern oder der Verarbeitung zu widersprechen.</li>
+    <li>Eure Daten in einem gängigen, maschinenlesbaren Format zu erhalten (Datenübertragbarkeit).</li>
+    <li>Euch bei der zuständigen Aufsichtsbehörde zu beschweren.</li>
+  </ul>
+  <p>Wenn ihr Fragen dazu habt oder eure Daten löschen lassen wollt, meldet euch einfach bei uns unter der oben genannten E-Mail-Adresse.</p>
 </div>
 {% endblock %}

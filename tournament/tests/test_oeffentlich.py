@@ -126,3 +126,17 @@ class BrandingTests(TestCase):
     @override_settings(QUELLCODE_URL="https://git.example-uni.de/satzball")
     def test_quellcode_url_einstellbar(self):
         self.assertContains(self.client.get(reverse("startseite")), 'href="https://git.example-uni.de/satzball"')
+
+
+class DatenschutzTests(TestCase):
+    @override_settings(VERANTWORTLICHER=["Erika Muster", "Hauptstr. 1", "E-Mail: datenschutz@example.de"])
+    def test_verantwortlicher_aus_einstellung(self):
+        r = self.client.get(reverse("datenschutz"))
+        self.assertContains(r, "Erika Muster<br>Hauptstr. 1<br>", html=False)
+        self.assertContains(r, 'href="mailto:datenschutz@example.de"')
+        self.assertContains(r, "TDDDG")
+        self.assertNotContains(r, "Hinweis für den Betreiber")
+
+    @override_settings(VERANTWORTLICHER=[])
+    def test_hinweis_ohne_verantwortlichen(self):
+        self.assertContains(self.client.get(reverse("datenschutz")), "SATZBALL_VERANTWORTLICHER")
