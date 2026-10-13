@@ -136,6 +136,8 @@ class Turnier(models.Model):
         self.save(update_fields=["teamdaten_geloescht_am"])
 
     def clean(self):
+        if self.min_spieler is not None and self.min_spieler < MIN_SPIELER:
+            raise ValidationError({"min_spieler": f"Mindestens {MIN_SPIELER} – weniger Spieler sind nie erlaubt."})
         if self.max_spieler is not None and self.max_spieler < MIN_SPIELER:
             raise ValidationError({"max_spieler": f"Mindestens {MIN_SPIELER}."})
         if self.min_spieler is not None and self.max_spieler is not None and self.min_spieler > self.max_spieler:

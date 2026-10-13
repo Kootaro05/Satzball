@@ -27,7 +27,7 @@
     hinzu.disabled = sichtbar.length >= max;
     if (!hinweis) return;
     hinweis.hidden = false;
-    hinweis.classList.toggle("hinweis--warnung", n < empfohlen);
+    hinweis.classList.toggle("hinweis--warnung", n < Math.max(pflicht, empfohlen));
     hinweis.textContent = n < pflicht ? "Mindestens " + pflicht + " Spieler – noch " + (pflicht - n) + (pflicht - n === 1 ? " fehlt." : " fehlen.")
       : n < empfohlen ? "Empfohlen sind " + empfohlen + " Spieler. Ihr könnt aber auch mit " + n + " antreten."
       : n >= max ? "Maximum von " + max + " Spielern erreicht."
