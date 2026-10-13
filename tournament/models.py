@@ -46,6 +46,10 @@ class Turnier(models.Model):
     anzahl_felder = models.PositiveSmallIntegerField("Anzahl Felder", default=2)
     slot_minuten = models.PositiveSmallIntegerField("Slotlänge (min)", default=20)
     spielplan_veroeffentlicht = models.BooleanField("Spielplan veröffentlicht", default=False)
+    teamdaten_geloescht_am = models.DateField(
+        "Teamdaten gelöscht am", null=True, blank=True, editable=False,
+        help_text="Spieler und Kapitänsdaten sind gelöscht; Teamnamen und Ergebnisse bleiben.",
+    )
     zaehlmodus = models.CharField("Zählmodus", max_length=10, choices=Zaehlmodus.choices, default=Zaehlmodus.SAETZE)
     gewinnsaetze = models.PositiveSmallIntegerField(
         "Gewinnsätze", choices=Gewinnsaetze.choices, default=Gewinnsaetze.BEST_OF_3,
@@ -104,6 +108,17 @@ class Turnier(models.Model):
             "warteliste": sum(1 for t in teams if t.status == Team.Status.WARTELISTE),
         }
 
+    def teamdaten_loeschen(self):
+        """Datenschutz: Spieler, Kapitänsdaten und Notizen löschen, Bearbeitungslinks ungültig machen.
+        Teamnamen und Ergebnisse bleiben."""
+        Spieler.objects.filter(team__turnier=self).delete()
+        for team in self.teams.all():
+            Team.objects.filter(pk=team.pk).update(
+                kapitaen_name="", kapitaen_email="", notiz="", edit_token=neuer_edit_token(),
+            )
+        self.teamdaten_geloescht_am = timezone.localdate()
+        self.save(update_fields=["teamdaten_geloescht_am"])
+
     def clean(self):
         if self.min_spieler is not None and self.max_spieler is not None and self.min_spieler > self.max_spieler:
             raise ValidationError({"max_spieler": "Muss mindestens so groß sein wie min. Spieler."})
@@ -145,8 +160,9 @@ class Team(models.Model):
 
     turnier = models.ForeignKey(Turnier, on_delete=models.CASCADE, related_name="teams")
     name = models.CharField("Teamname", max_length=100)
-    kapitaen_name = models.CharField("Kapitän", max_length=100)
-    kapitaen_email = models.EmailField("E-Mail Kapitän")
+    # Leer nur nach dem Löschen der Teamdaten (Datenschutz); im Anmeldeformular Pflicht.
+    kapitaen_name = models.CharField("Kapitän", max_length=100, blank=True)
+    kapitaen_email = models.EmailField("E-Mail Kapitän", blank=True)
     edit_token = models.CharField(max_length=64, unique=True, default=neuer_edit_token, editable=False)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.ANGEMELDET)
     bezahlt = models.BooleanField(default=False)

@@ -128,4 +128,10 @@ LOGGING = {
 }
 
 # Hinter einem HTTPS-Reverse-Proxy (nur wirksam, wenn der Proxy den Header setzt).
+# Der Container darf deshalb nur über den Proxy erreichbar sein (Port an 127.0.0.1 binden).
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# DJANGO_HTTPS=1 auf dem Server: Cookies nur über HTTPS. Lokal aus, sonst klappt der Login über http nicht.
+if os.environ.get("DJANGO_HTTPS") == "1":
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True

@@ -2,6 +2,8 @@ from collections import defaultdict
 
 from django.contrib import admin, messages
 from django.db.models import Count
+from django.template.response import TemplateResponse
+from django.utils import timezone
 from django.urls import reverse
 from django.utils.html import format_html
 
@@ -27,11 +29,14 @@ class TurnierAdmin(admin.ModelAdmin):
     search_fields = ["name", "ort"]
     date_hierarchy = "datum"
     inlines = [GruppeInline]
+    actions = ["teamdaten_loeschen"]
+    readonly_fields = ["teamdaten_geloescht_am"]
     fieldsets = [
         (None, {"fields": ["name", "datum", "beginn", "ort", "startgebuehr_eur", "zahlungsinfo"]}),
         ("Anmeldung", {"fields": ["anmeldung_offen", "meldeschluss", "max_teams", "min_spieler", "max_spieler"]}),
         ("Modus", {"fields": ["modus", "anzahl_felder", "slot_minuten", "spielplan_veroeffentlicht"]}),
         ("Zählweise", {"fields": ["zaehlmodus", "gewinnsaetze", "punkte_pro_satz", "punkte_entscheidungssatz"]}),
+        ("Datenschutz", {"fields": ["teamdaten_geloescht_am"]}),
     ]
 
     def get_queryset(self, request):
@@ -40,6 +45,32 @@ class TurnierAdmin(admin.ModelAdmin):
     @admin.display(description="Teams", ordering="_anzahl_teams")
     def anzahl_teams(self, obj):
         return obj._anzahl_teams
+
+    @admin.action(description="Teamdaten löschen (Datenschutz)")
+    def teamdaten_loeschen(self, request, queryset):
+        """Erst nach dem Turniertag und nur nach Bestätigung."""
+        heute = timezone.localdate()
+        zu_frueh = [t for t in queryset if t.datum >= heute]
+        for turnier in zu_frueh:
+            self.message_user(request, f"{turnier}: erst nach dem Turniertag möglich.", messages.WARNING)
+        turniere = [t for t in queryset if t.datum < heute]
+        if not turniere:
+            return None
+        if request.POST.get("bestaetigt") != "ja":
+            return TemplateResponse(request, "admin/tournament/turnier/teamdaten_loeschen.html", {
+                **self.admin_site.each_context(request),
+                "title": "Teamdaten löschen",
+                "turniere": turniere,
+                "action_checkbox_name": admin.helpers.ACTION_CHECKBOX_NAME,
+                "opts": self.model._meta,
+            })
+        for turnier in turniere:
+            turnier.teamdaten_loeschen()
+        self.message_user(
+            request, f"Teamdaten von {len(turniere)} Turnier(en) gelöscht. Teamnamen und Ergebnisse bleiben.",
+            messages.SUCCESS,
+        )
+        return None
 
     @admin.display(description="Spielplan")
     def spielplan_link(self, obj):

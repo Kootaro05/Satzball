@@ -1,0 +1,26 @@
+{% extends "admin/base_site.html" %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Start</a> › <a href="{% url 'admin:tournament_turnier_changelist' %}">Turniere</a> › Teamdaten löschen
+</div>
+{% endblock %}
+{% block content %}
+<p>Für diese Turniere werden <strong>endgültig</strong> gelöscht:</p>
+<ul>
+  <li>alle Spielerinnen und Spieler,</li>
+  <li>Name und E-Mail der Kapitäne sowie Notizen,</li>
+  <li>die Bearbeitungslinks (sie funktionieren danach nicht mehr).</li>
+</ul>
+<p>Teamnamen, Zahlungsstatus, Spielplan und Ergebnisse bleiben erhalten.</p>
+<ul>
+  {% for t in turniere %}<li><strong>{{ t.name }}</strong> ({{ t.datum|date:"j.n.Y" }}, {{ t.teams.count }} Teams)</li>{% endfor %}
+</ul>
+<form method="post">
+  {% csrf_token %}
+  {% for t in turniere %}<input type="hidden" name="{{ action_checkbox_name }}" value="{{ t.pk }}">{% endfor %}
+  <input type="hidden" name="action" value="teamdaten_loeschen">
+  <input type="hidden" name="bestaetigt" value="ja">
+  <input type="submit" value="Ja, Teamdaten löschen">
+  <a href="{% url 'admin:tournament_turnier_changelist' %}" class="button cancel-link">Abbrechen</a>
+</form>
+{% endblock %}

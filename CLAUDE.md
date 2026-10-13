@@ -35,6 +35,8 @@ Umgebungsvariablen (alle optional): `DJANGO_DEBUG` (lokal Standard `1`, im Conta
 `DJANGO_CSRF_TRUSTED_ORIGINS` (z. B. `https://volleyball.example.de`, nötig hinter HTTPS-Proxy),
 `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS`, `DEFAULT_FROM_EMAIL`
 (ohne `EMAIL_HOST` werden Mails nur in die Konsole/das Log geschrieben).
+`DJANGO_HTTPS=1` (auf dem Server hinter nginx: Cookies nur über HTTPS).
+Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/satzball.env.example`.
 
 ## Fachliche Regeln
 
@@ -81,6 +83,12 @@ Umgebungsvariablen (alle optional): `DJANGO_DEBUG` (lokal Standard `1`, im Conta
 - Öffentlich `/spielplan/` (Screen 05): Spiele nach Uhrzeit und Feld, Ergebnisse, "Läuft" für den
   aktuellen Slot am Spieltag, Gruppentabellen (`#tabelle`). Nur sichtbar, wenn
   `Turnier.spielplan_veroeffentlicht`. Keine E-Mails oder Zahlungsdaten auf öffentlichen Seiten.
+- Datenschutz nach dem Turnier: Admin-Aktion "Teamdaten löschen" (`Turnier.teamdaten_loeschen`), erst nach
+  dem Turniertag, mit Bestätigung. Löscht Spieler, Kapitänsdaten, Notizen, macht Links ungültig;
+  Teamnamen und Ergebnisse bleiben. Deshalb sind `kapitaen_name/-email` im Model optional
+  (im Anmeldeformular Pflicht).
+- Befehle: `testturnier [--teams N] [--spielplan]` (Probelauf), `sicherung [--behalten N]`
+  (SQLite-Backup nach `data/sicherungen/`).
 - Ergebnis eintragen: `/orga/spiel/<id>/`, Satz-Modus Sätze (+ optional Ballpunkte gesamt),
   Punkte-Modus Punktzähler.
 - Abweichung vom Design: "Ergebnis eintragen" zeigt im Punkte-Modus Punktzähler
