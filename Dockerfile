@@ -1,10 +1,11 @@
 FROM python:3.12-slim
 
+# PIP_*: Hinweise beim Bauen abschalten – pip als root ist im Image gewollt,
+# und pip selbst kommt mit dem Basis-Image (Updates über Dependabot).
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     DJANGO_DEBUG=0 \
     DJANGO_ALLOWED_HOSTS=* \
-    # pip-Hinweise beim Bauen abschalten: root ist im Image gewollt, pip kommt mit dem Basis-Image
     PIP_ROOT_USER_ACTION=ignore \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
