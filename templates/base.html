@@ -29,6 +29,8 @@
     <nav class="nav">
       <a href="{% url 'startseite' %}"{% if request.resolver_match.url_name == 'startseite' %} aria-current="page"{% endif %}>Turnier</a>
       <a href="{% url 'teamliste' %}"{% if request.resolver_match.url_name == 'teamliste' %} aria-current="page"{% endif %}>Teams</a>
+      <a href="{% url 'spielplan' %}"{% if request.resolver_match.url_name == 'spielplan' %} aria-current="page"{% endif %}>Spielplan</a>
+      <a href="{% url 'spielplan' %}#tabelle">Tabelle</a>
     </nav>
     {% endblock %}
   </div>

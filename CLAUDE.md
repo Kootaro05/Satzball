@@ -78,6 +78,9 @@ Umgebungsvariablen (alle optional): `DJANGO_DEBUG` (lokal Standard `1`, im Conta
   der Tabelle), offene Spiele der betroffenen Gruppe werden ohne das Team neu gepaart, alle offenen
   Spiele rücken ab dem nächsten freien Slot lückenlos auf, K.-o. danach.
 - Tabelle: `tournament/tabelle.py` (`berechnen`, `gruppentabellen`), zählt nur beendete Gruppenspiele.
+- Öffentlich `/spielplan/` (Screen 05): Spiele nach Uhrzeit und Feld, Ergebnisse, "Läuft" für den
+  aktuellen Slot am Spieltag, Gruppentabellen (`#tabelle`). Nur sichtbar, wenn
+  `Turnier.spielplan_veroeffentlicht`. Keine E-Mails oder Zahlungsdaten auf öffentlichen Seiten.
 - Ergebnis eintragen: `/orga/spiel/<id>/`, Satz-Modus Sätze (+ optional Ballpunkte gesamt),
   Punkte-Modus Punktzähler.
 - Abweichung vom Design: "Ergebnis eintragen" zeigt im Punkte-Modus Punktzähler

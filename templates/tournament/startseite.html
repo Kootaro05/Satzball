@@ -47,6 +47,10 @@
     <a class="btn" href="{% url 'anmelden' %}">Team anmelden <span aria-hidden="true">→</span></a>
   {% endif %}
 
+  {% if turnier.spielplan_veroeffentlicht %}
+    <a class="btn{% if turnier.anmeldung_moeglich %} btn--sekundaer{% endif %}" href="{% url 'spielplan' %}">Spielplan &amp; Ergebnisse <span aria-hidden="true">→</span></a>
+  {% endif %}
+
   <div class="stapel">
     <div class="kopfzeile">
       <h2 class="zwischen zwischen--l">Angemeldet</h2>

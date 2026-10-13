@@ -26,22 +26,8 @@ def _turnier(request):
     return get_object_or_404(Turnier, pk=turnier_id) if turnier_id else Turnier.aktuelles()
 
 
-def _titel(spiele):
-    """Spieltitel: "Gruppe A" bzw. "Halbfinale 1" (Nummer nach Zeit und Feld)."""
-    zaehler = {}
-    for s in sorted(spiele, key=lambda s: (s.uhrzeit is None, s.uhrzeit, s.feld)):
-        if s.phase == Spiel.Phase.GRUPPE:
-            s.titel = f"Gruppe {s.gruppe.name}" if s.gruppe else "Gruppenspiel"
-        elif s.phase in (Spiel.Phase.FINALE, Spiel.Phase.PLATZ_3):
-            s.titel = s.get_phase_display()
-        else:
-            zaehler[s.phase] = zaehler.get(s.phase, 0) + 1
-            s.titel = f"{s.get_phase_display()} {zaehler[s.phase]}"
-    return spiele
-
-
 def _spiele(turnier):
-    return _titel(list(turnier.spiele.select_related("gruppe", "team_a", "team_b", "schiri_team")))
+    return spielplan.mit_titeln(turnier)
 
 
 @staff_member_required

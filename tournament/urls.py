@@ -5,6 +5,7 @@ from . import orga, views
 urlpatterns = [
     path("", views.startseite, name="startseite"),
     path("teams/", views.teamliste, name="teamliste"),
+    path("spielplan/", views.spielplan, name="spielplan"),
     path("anmelden/", views.anmelden, name="anmelden"),
     path("datenschutz/", views.datenschutz, name="datenschutz"),
     path("team/<str:token>/", views.team_bearbeiten, name="team_bearbeiten"),
