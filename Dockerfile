@@ -3,7 +3,10 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     DJANGO_DEBUG=0 \
-    DJANGO_ALLOWED_HOSTS=*
+    DJANGO_ALLOWED_HOSTS=* \
+    # pip-Hinweise beim Bauen abschalten: root ist im Image gewollt, pip kommt mit dem Basis-Image
+    PIP_ROOT_USER_ACTION=ignore \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 WORKDIR /app
 
