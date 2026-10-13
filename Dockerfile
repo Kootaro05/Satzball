@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 # PIP_*: Hinweise beim Bauen abschalten – pip als root ist im Image gewollt,
 # und pip selbst kommt mit dem Basis-Image (Updates über Dependabot).
