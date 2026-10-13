@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.template.response import TemplateResponse
 from django.utils import timezone
@@ -10,6 +11,11 @@ from django.utils.html import format_html
 
 from . import ko, spielplan, warteliste
 from .models import Gruppe, Spiel, Spieler, Team, Turnier
+
+def _mail_hinweis(team):
+    """Für Meldungen: ging die Mail an das Team wirklich raus?"""
+    return "Mail verschickt" if getattr(team, "mail_verschickt", False) else "keine Mail – E-Mail-Adresse fehlt"
+
 
 admin.site.site_header = "Satzball – Orga"
 admin.site.site_title = "Satzball"
@@ -57,7 +63,7 @@ class TurnierAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
         # Mehr Plätze oder Haken gerade gesetzt: Warteliste sofort nachrücken lassen
         for team in warteliste.auffuellen(obj, request):
-            self.message_user(request, f"{team} ist automatisch von der Warteliste nachgerückt (Mail verschickt).",
+            self.message_user(request, f"{team} ist automatisch von der Warteliste nachgerückt ({_mail_hinweis(team)}).",
                               messages.SUCCESS)
 
     @admin.action(description="Teamdaten löschen (Datenschutz)")
@@ -165,9 +171,15 @@ class TeamAdmin(admin.ModelAdmin):
             *super().get_urls(),
         ]
 
+    def _knopf_turnier(self, request, turnier_id):
+        """Für die Knöpfe in den Kacheln: Turnier holen; nur wer Teams ändern darf, darf sie auslösen."""
+        if not self.has_change_permission(request):
+            raise PermissionDenied
+        return get_object_or_404(Turnier, pk=turnier_id)
+
     def an_zahlung_erinnern(self, request, turnier_id):
         """Knopf in der Kachel "Unbezahlt" (vor dem Meldeschluss): Erinnerungsmail an alle unbezahlten Teams."""
-        turnier = get_object_or_404(Turnier, pk=turnier_id)
+        turnier = self._knopf_turnier(request, turnier_id)
         if request.method == "POST":
             anzahl = warteliste.an_zahlung_erinnern(turnier, request)
             self.message_user(request, f"Erinnerung an {anzahl} Team(s) verschickt.", messages.SUCCESS)
@@ -175,24 +187,26 @@ class TeamAdmin(admin.ModelAdmin):
 
     def unbezahlte_auf_warteliste(self, request, turnier_id):
         """Knopf in der Kachel "Unbezahlt" (nach dem Meldeschluss): Plätze an die Warteliste geben."""
-        turnier = get_object_or_404(Turnier, pk=turnier_id)
+        turnier = self._knopf_turnier(request, turnier_id)
         if request.method == "POST":
             if not turnier.meldeschluss_vorbei:
                 self.message_user(request, "Erst nach dem Meldeschluss möglich.", messages.WARNING)
             else:
                 verschoben, nachgerueckt = warteliste.unbezahlte_auf_warteliste(turnier, request)
+                mails = sum(1 for t in verschoben if t.mail_verschickt)
                 self.message_user(
-                    request, f"{len(verschoben)} unbezahlte(s) Team(s) ans Ende der Warteliste gesetzt, Mail verschickt.",
+                    request, f"{len(verschoben)} unbezahlte(s) Team(s) ans Ende der Warteliste gesetzt, "
+                             f"{mails} Mail(s) verschickt.",
                     messages.SUCCESS,
                 )
                 for team in nachgerueckt:
-                    self.message_user(request, f"{team} ist automatisch von der Warteliste nachgerückt (Mail verschickt).",
+                    self.message_user(request, f"{team} ist automatisch von der Warteliste nachgerückt ({_mail_hinweis(team)}).",
                                       messages.SUCCESS)
         return redirect(f"{reverse('admin:tournament_team_changelist')}?turnier__id__exact={turnier.pk}")
 
     def naechsten_nachruecken(self, request, turnier_id):
         """Knopf in der Kachel "Warteliste": das erste wartende Team auf einen freien Platz holen."""
-        turnier = get_object_or_404(Turnier, pk=turnier_id)
+        turnier = self._knopf_turnier(request, turnier_id)
         zurueck = f"{reverse('admin:tournament_team_changelist')}?turnier__id__exact={turnier.pk}"
         if request.method != "POST":
             return redirect(zurueck)
@@ -203,7 +217,8 @@ class TeamAdmin(admin.ModelAdmin):
             self.message_user(request, "Kein Platz frei – erst beim Turnier mehr Plätze einstellen.", messages.WARNING)
         else:
             warteliste.nachruecken(team, request)
-            self.message_user(request, f"{team} ist von der Warteliste nachgerückt, Mail verschickt.", messages.SUCCESS)
+            self.message_user(request, f"{team} ist von der Warteliste nachgerückt ({_mail_hinweis(team)}).",
+                              messages.SUCCESS)
         return redirect(zurueck)
 
     # Teams dürfen auch mit geplanten Spielen gelöscht werden; danach wird der Plan automatisch angepasst.
@@ -223,9 +238,9 @@ class TeamAdmin(admin.ModelAdmin):
 
     @admin.action(description="Von der Warteliste nachrücken")
     def nachruecken(self, request, queryset):
-        nachgerueckt = 0
+        nachgerueckt = mails = 0
         for team in queryset.filter(status=Team.Status.WARTELISTE).select_related("turnier").order_by(*Team.REIHENFOLGE):
-            warteliste.nachruecken(team, request)  # setzt den Status und schickt die Mail
+            mails += warteliste.nachruecken(team, request)  # setzt den Status und schickt die Mail
             nachgerueckt += 1
             if team.turnier.belegte_plaetze > team.turnier.max_teams:
                 self.message_user(
@@ -233,7 +248,7 @@ class TeamAdmin(admin.ModelAdmin):
                     f"({team.turnier.belegte_plaetze} von {team.turnier.max_teams}).", messages.WARNING,
                 )
         if nachgerueckt:
-            self.message_user(request, f"{nachgerueckt} Team(s) von der Warteliste nachgerückt, Mail verschickt.",
+            self.message_user(request, f"{nachgerueckt} Team(s) von der Warteliste nachgerückt, {mails} Mail(s) verschickt.",
                               messages.SUCCESS)
         else:
             self.message_user(request, "Keines der gewählten Teams steht auf der Warteliste.", messages.WARNING)
@@ -255,7 +270,7 @@ class TeamAdmin(admin.ModelAdmin):
     def _auffuellen(self, request, turniere, ausser=None):
         for turnier in turniere:
             for team in warteliste.auffuellen(turnier, request, ausser=ausser):
-                self.message_user(request, f"{team} ist automatisch von der Warteliste nachgerückt (Mail verschickt).",
+                self.message_user(request, f"{team} ist automatisch von der Warteliste nachgerückt ({_mail_hinweis(team)}).",
                                   messages.SUCCESS)
 
     @admin.display(description="Bearbeitungslink")

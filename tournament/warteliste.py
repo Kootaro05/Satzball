@@ -41,7 +41,8 @@ def nachruecken(team, request):
     """Team von der Warteliste holen und den Kapitän informieren."""
     team.status = Team.Status.ANGEMELDET
     team.save()  # bezahlte Teams werden dabei direkt bestätigt
-    _mail(team, request, "mail/nachgerueckt.txt", f"Ihr seid nachgerückt: {team.turnier.name}")
+    team.mail_verschickt = _mail(team, request, "mail/nachgerueckt.txt", f"Ihr seid nachgerückt: {team.turnier.name}")
+    return team.mail_verschickt
 
 
 def auffuellen(turnier, request, ausser=None):
@@ -95,5 +96,5 @@ def unbezahlte_auf_warteliste(turnier, request):
         team.save()
         verschoben.append(team)
     for team in verschoben:  # erst danach: die Wartelisten-Plätze stimmen jetzt
-        _mail(team, request, "mail/auf_warteliste.txt", f"Euer Platz bei {turnier.name}")
+        team.mail_verschickt = _mail(team, request, "mail/auf_warteliste.txt", f"Euer Platz bei {turnier.name}")
     return verschoben, auffuellen(turnier, request, ausser=verschoben)

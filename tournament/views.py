@@ -149,6 +149,9 @@ def anmelden(request):
     formset = SpielerFormSet(request.POST or None, turnier=turnier, prefix="spieler")
 
     if request.method == "POST" and form.is_valid() and formset.is_valid():
+        # Erst freie Plätze an die Wartenden (mit Haken), dann entscheidet sich der Status des neuen Teams –
+        # so überholt niemand die Warteliste und das neue Team bekommt genau eine Mail.
+        warteliste.auffuellen(turnier, request)
         with transaction.atomic():
             team = form.save(commit=False)
             team.turnier = turnier
@@ -158,7 +161,6 @@ def anmelden(request):
             formset.instance = team
             formset.save()
         _bearbeitungslink_senden(request, team)
-        warteliste.auffuellen(turnier, request)  # mit Haken rückt ggf. das erste wartende Team nach
         return redirect("team_angemeldet", token=team.edit_token)
 
     return render(request, "tournament/anmelden.html", {"turnier": turnier, "form": form, "formset": formset})

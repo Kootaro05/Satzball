@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Permission, User
 from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
@@ -138,7 +138,7 @@ class WartelisteTests(TestCase):
         r = self.client.post(reverse("admin:tournament_team_changelist"), {
             "action": "nachruecken", "_selected_action": [self.mitte.pk, self.alpha.pk],
         }, follow=True)
-        self.assertContains(r, "2 Team(s) von der Warteliste nachgerückt, Mail verschickt")
+        self.assertContains(r, "2 Team(s) von der Warteliste nachgerückt, 2 Mail(s) verschickt")
         self.assertEqual([m.to[0] for m in mail.outbox], ["alpha@example.de", "mitte@example.de"])
 
     def anmelden(self, name):
@@ -200,7 +200,7 @@ class WartelisteTests(TestCase):
         self.assertContains(r, f'action="{knopf}"')
 
         r = self.client.post(knopf, follow=True)
-        self.assertContains(r, "Alpha ist von der Warteliste nachgerückt, Mail verschickt")
+        self.assertContains(r, "Alpha ist von der Warteliste nachgerückt (Mail verschickt)")
         self.alpha.refresh_from_db()
         self.assertEqual(self.alpha.status, Team.Status.ANGEMELDET)
         self.assertEqual([m.to for m in mail.outbox], [["alpha@example.de"]])
@@ -223,3 +223,38 @@ class WartelisteTests(TestCase):
         self.client.get(knopf)
         self.alpha.refresh_from_db()
         self.assertEqual(self.alpha.status, Team.Status.WARTELISTE)
+
+    def test_anmeldung_mit_haken_und_mehreren_freien_plaetzen_nur_eine_mail(self):
+        # 2 Plätze frei, nur Alpha wartet (Mitte weg): Alpha rückt nach, das neue Team bekommt den
+        # zweiten Platz direkt – und genau eine Mail (die Anmeldung), keine zusätzliche "nachgerückt"-Mail
+        self.mitte.delete()
+        self.t.max_teams = 3
+        self.automatisch()
+        self.anmelden("Neu")
+        neu = Team.objects.get(name="Neu")
+        self.alpha.refresh_from_db()
+        self.assertEqual((self.alpha.status, neu.status), (Team.Status.ANGEMELDET, Team.Status.ANGEMELDET))
+        self.assertEqual(sorted(m.to[0] for m in mail.outbox), ["alpha@example.de", "neu@example.de"])
+
+    def test_knoepfe_nur_mit_aenderungsrecht(self):
+        nur_ansehen = User.objects.create_user("gast", "g@example.de", "x", is_staff=True)
+        nur_ansehen.user_permissions.add(Permission.objects.get(codename="view_team"))
+        self.client.force_login(nur_ansehen)
+        self.t.max_teams = 2
+        self.t.save()
+        for name in ["naechsten_nachruecken", "an_zahlung_erinnern", "unbezahlte_auf_warteliste"]:
+            r = self.client.post(reverse(f"admin:tournament_team_{name}", args=[self.t.pk]))
+            self.assertEqual(r.status_code, 403, name)
+        self.alpha.refresh_from_db()
+        self.assertEqual(self.alpha.status, Team.Status.WARTELISTE)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_meldung_ohne_email_adresse(self):
+        Team.objects.filter(pk=self.alpha.pk).update(kapitaen_email="")
+        self.orga()
+        self.t.max_teams = 2
+        self.t.save()
+        r = self.client.post(reverse("admin:tournament_team_naechsten_nachruecken", args=[self.t.pk]), follow=True)
+        self.assertContains(r, "Alpha ist von der Warteliste nachgerückt (keine Mail – E-Mail-Adresse fehlt)")
+        self.assertEqual(len(mail.outbox), 0)
+
