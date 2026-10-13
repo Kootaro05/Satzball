@@ -4,7 +4,8 @@ from django.contrib import admin, messages
 from django.db.models import Count
 from django.template.response import TemplateResponse
 from django.utils import timezone
-from django.urls import reverse
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import path, reverse
 from django.utils.html import format_html
 
 from . import ko, spielplan, warteliste
@@ -146,7 +147,35 @@ class TeamAdmin(admin.ModelAdmin):
         if turnier:
             extra_context["uebersicht_turnier"] = turnier
             extra_context["uebersicht"] = turnier.zahlungsuebersicht()
+            extra_context["freie_plaetze"] = turnier.freie_plaetze
+            if not turnier.warteliste_automatisch and turnier.freie_plaetze:
+                extra_context["naechster_wartend"] = (
+                    turnier.teams.filter(status=Team.Status.WARTELISTE).order_by(*Team.REIHENFOLGE).first()
+                )
         return super().changelist_view(request, extra_context=extra_context)
+
+    def get_urls(self):
+        return [
+            path("nachruecken/<int:turnier_id>/", self.admin_site.admin_view(self.naechsten_nachruecken),
+                 name="tournament_team_naechsten_nachruecken"),
+            *super().get_urls(),
+        ]
+
+    def naechsten_nachruecken(self, request, turnier_id):
+        """Knopf in der Kachel "Warteliste": das erste wartende Team auf einen freien Platz holen."""
+        turnier = get_object_or_404(Turnier, pk=turnier_id)
+        zurueck = f"{reverse('admin:tournament_team_changelist')}?turnier__id__exact={turnier.pk}"
+        if request.method != "POST":
+            return redirect(zurueck)
+        team = turnier.teams.filter(status=Team.Status.WARTELISTE).order_by(*Team.REIHENFOLGE).first()
+        if team is None:
+            self.message_user(request, "Niemand steht auf der Warteliste.", messages.WARNING)
+        elif not turnier.freie_plaetze:
+            self.message_user(request, "Kein Platz frei – erst beim Turnier mehr Plätze einstellen.", messages.WARNING)
+        else:
+            warteliste.nachruecken(team, request)
+            self.message_user(request, f"{team} ist von der Warteliste nachgerückt, Mail verschickt.", messages.SUCCESS)
+        return redirect(zurueck)
 
     # Teams dürfen auch mit geplanten Spielen gelöscht werden; danach wird der Plan automatisch angepasst.
     def delete_model(self, request, obj):

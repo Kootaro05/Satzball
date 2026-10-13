@@ -186,3 +186,40 @@ class WartelisteTests(TestCase):
         self.client.post(reverse("team_abmelden", args=[self.alpha.edit_token]))
         self.zeta.refresh_from_db()
         self.assertEqual(self.zeta.status, Team.Status.ANGEMELDET)
+
+    def kacheln(self):
+        return self.client.get(reverse("admin:tournament_team_changelist"), {"turnier__id__exact": self.t.pk})
+
+    def test_knopf_nachruecken(self):
+        self.orga()
+        self.t.max_teams = 2
+        self.t.save()
+        r = self.kacheln()
+        self.assertContains(r, "Nachrücken: Alpha")  # der Erste der Warteliste, nicht alphabetisch zufällig
+        knopf = reverse("admin:tournament_team_naechsten_nachruecken", args=[self.t.pk])
+        self.assertContains(r, f'action="{knopf}"')
+
+        r = self.client.post(knopf, follow=True)
+        self.assertContains(r, "Alpha ist von der Warteliste nachgerückt, Mail verschickt")
+        self.alpha.refresh_from_db()
+        self.assertEqual(self.alpha.status, Team.Status.ANGEMELDET)
+        self.assertEqual([m.to for m in mail.outbox], [["alpha@example.de"]])
+        self.assertContains(r, "kein Platz frei")  # jetzt voll, Mitte wartet weiter
+
+    def test_knopf_nur_wenn_sinnvoll(self):
+        self.orga()
+        self.assertContains(self.kacheln(), "kein Platz frei")  # 1 von 1 Platz belegt
+        self.automatisch()
+        self.assertContains(self.kacheln(), "rücken automatisch nach")
+        self.assertNotContains(self.kacheln(), "Nachrücken: ")
+
+    def test_knopf_aendert_nichts_per_get_und_braucht_login(self):
+        knopf = reverse("admin:tournament_team_naechsten_nachruecken", args=[self.t.pk])
+        self.t.max_teams = 2
+        self.t.save()
+        r = self.client.post(knopf)
+        self.assertIn("/admin/login/", r.url)  # ohne Orga-Login kein Nachrücken
+        self.orga()
+        self.client.get(knopf)
+        self.alpha.refresh_from_db()
+        self.assertEqual(self.alpha.status, Team.Status.WARTELISTE)

@@ -64,7 +64,9 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
   `bestaetigt` (in `Team.save()`); wird `bezahlt` zurückgenommen, wieder `angemeldet`.
   Warteliste und Absage ändert das nicht. Kapitän kann bis Meldeschluss abmelden (`abgesagt`).
   Warteliste in Anmelde-Reihenfolge (`Team.angemeldet_am`, dann pk; `Team.REIHENFOLGE`, `wartelisten_platz`).
-  Nachrücken: Orga per Admin-Aktion, oder automatisch, wenn `Turnier.warteliste_automatisch` gesetzt ist
+  Neue Anmeldungen stellen sich hinten an, solange jemand wartet (`Turnier.neue_auf_warteliste`).
+  Nachrücken: Orga per Knopf in der Kachel „Warteliste“ (nächstes Team) bzw. Admin-Aktion, oder automatisch,
+  wenn `Turnier.warteliste_automatisch` gesetzt ist
   (`tournament/warteliste.py`: nach Abmeldung, Absage/Löschen im Admin, mehr Plätzen). Das nachgerückte
   Team bekommt immer eine Mail.
 - Zahlungs-Tracking im Admin (Teamliste): Haken "bezahlt" und Zahlungsart direkt in der Liste,
