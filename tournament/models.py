@@ -58,6 +58,11 @@ class Turnier(models.Model):
     anzahl_felder = models.PositiveSmallIntegerField("Anzahl Felder", default=2)
     slot_minuten = models.PositiveSmallIntegerField("Slotlänge (min)", default=20)
     spielplan_veroeffentlicht = models.BooleanField("Spielplan veröffentlicht", default=False)
+    warteliste_automatisch = models.BooleanField(
+        "Warteliste automatisch nachrücken lassen", default=False,
+        help_text="Wird ein Platz frei, rückt das erste Team der Warteliste nach und bekommt eine Mail. "
+                  "Sonst entscheidet die Orga über die Aktion „Von der Warteliste nachrücken“.",
+    )
     teamdaten_geloescht_am = models.DateField(
         "Teamdaten gelöscht am", null=True, blank=True, editable=False,
         help_text="Spieler und Kapitänsdaten sind gelöscht; Teamnamen und Ergebnisse bleiben.",
@@ -201,9 +206,12 @@ class Team(models.Model):
     zahlungsart = models.CharField(max_length=20, choices=Zahlungsart.choices, blank=True)
     notiz = models.TextField(blank=True)
     gruppe = models.ForeignKey(Gruppe, on_delete=models.SET_NULL, null=True, blank=True, related_name="teams")
+    angemeldet_am = models.DateTimeField("angemeldet am", auto_now_add=True)
 
     # Teams mit diesem Status belegen einen der max_teams Plätze.
     STARTPLATZ_STATUS = [Status.ANGEMELDET, Status.BESTAETIGT]
+    # Wer zuerst kommt: Anmeldezeit, bei gleicher Zeit (z. B. Altdaten) die laufende Nummer
+    REIHENFOLGE = ["angemeldet_am", "pk"]
 
     objects = TeamQuerySet.as_manager()
 
@@ -239,7 +247,20 @@ class Team(models.Model):
         """Laufende Nummer unter den Teams mit Startplatz (in Anmelde-Reihenfolge)."""
         if not self.hat_startplatz:
             return None
-        return Team.objects.filter(turnier_id=self.turnier_id, status__in=self.STARTPLATZ_STATUS, pk__lte=self.pk).count()
+        return self._vor_mir().filter(status__in=self.STARTPLATZ_STATUS).count() + 1
+
+    @property
+    def wartelisten_platz(self):
+        """Platz auf der Warteliste (1 = rückt als Nächstes nach), sonst None."""
+        if self.status != self.Status.WARTELISTE:
+            return None
+        return self._vor_mir().filter(status=self.Status.WARTELISTE).count() + 1
+
+    def _vor_mir(self):
+        """Teams desselben Turniers, die sich früher angemeldet haben."""
+        return Team.objects.filter(turnier_id=self.turnier_id).filter(
+            models.Q(angemeldet_am__lt=self.angemeldet_am) | models.Q(angemeldet_am=self.angemeldet_am, pk__lt=self.pk)
+        )
 
     def clean(self):
         if self.gruppe_id and self.turnier_id and self.gruppe.turnier_id != self.turnier_id:

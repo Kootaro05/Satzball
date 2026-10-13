@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.urls import reverse
 from django.utils.html import format_html
 
-from . import ko, spielplan
+from . import ko, spielplan, warteliste
 from .models import Gruppe, Spiel, Spieler, Team, Turnier
 
 admin.site.site_header = "Satzball – Orga"
@@ -37,7 +37,9 @@ class TurnierAdmin(admin.ModelAdmin):
         js = ["js/admin_turnier.js"]  # Satz-Felder im Punkte-Modus ausgrauen
     fieldsets = [
         (None, {"fields": ["name", "oeffentlich", "datum", "beginn", "ort", "startgebuehr_eur", "zahlungsinfo"]}),
-        ("Anmeldung", {"fields": ["anmeldung_offen", "meldeschluss", "max_teams", "min_spieler", "max_spieler"]}),
+        ("Anmeldung", {"fields": [
+            "anmeldung_offen", "meldeschluss", "max_teams", "warteliste_automatisch", "min_spieler", "max_spieler",
+        ]}),
         ("Modus", {"fields": ["modus", "anzahl_felder", "slot_minuten", "spielplan_veroeffentlicht"]}),
         ("Zählweise", {"fields": ["zaehlmodus", "gewinnsaetze", "punkte_pro_satz", "punkte_entscheidungssatz"]}),
         ("Datenschutz", {"fields": ["teamdaten_geloescht_am"]}),
@@ -49,6 +51,13 @@ class TurnierAdmin(admin.ModelAdmin):
     @admin.display(description="Teams", ordering="_anzahl_teams")
     def anzahl_teams(self, obj):
         return obj._anzahl_teams
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        # Mehr Plätze oder Haken gerade gesetzt: Warteliste sofort nachrücken lassen
+        for team in warteliste.auffuellen(obj, request):
+            self.message_user(request, f"{team} ist automatisch von der Warteliste nachgerückt (Mail verschickt).",
+                              messages.SUCCESS)
 
     @admin.action(description="Teamdaten löschen (Datenschutz)")
     def teamdaten_loeschen(self, request, queryset):
@@ -104,9 +113,10 @@ class ZahlungFilter(admin.SimpleListFilter):
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
     list_display = [
-        "name", "kapitaen_name", "turnier", "anzahl_spieler", "status",
-        "bezahlt", "bezahlt_am", "zahlungsart", "gruppe",
+        "name", "kapitaen_name", "turnier", "anzahl_spieler", "status", "wartelisten_platz",
+        "bezahlt", "bezahlt_am", "zahlungsart", "gruppe", "angemeldet_am",
     ]
+    ordering = ["turnier", *Team.REIHENFOLGE]  # wer zuerst kommt, steht oben
     list_filter = ["turnier", "status", ZahlungFilter, "zahlungsart"]
     list_editable = ["bezahlt", "zahlungsart"]
     show_facets = admin.ShowFacets.ALWAYS
@@ -147,16 +157,17 @@ class TeamAdmin(admin.ModelAdmin):
         for turnier_id, gruppe_id in queryset.values_list("turnier_id", "gruppe_id"):
             if gruppe_id:
                 betroffen[turnier_id].add(gruppe_id)
+        turnier_ids = set(queryset.values_list("turnier_id", flat=True))
         super().delete_queryset(request, queryset)
         for turnier in Turnier.objects.filter(pk__in=betroffen):
             spielplan.umplanen(turnier, betroffen[turnier.pk])
+        self._auffuellen(request, Turnier.objects.filter(pk__in=turnier_ids))
 
     @admin.action(description="Von der Warteliste nachrücken")
     def nachruecken(self, request, queryset):
         nachgerueckt = 0
-        for team in queryset.filter(status=Team.Status.WARTELISTE).select_related("turnier"):
-            team.status = Team.Status.ANGEMELDET
-            team.save()
+        for team in queryset.filter(status=Team.Status.WARTELISTE).select_related("turnier").order_by(*Team.REIHENFOLGE):
+            warteliste.nachruecken(team, request)  # setzt den Status und schickt die Mail
             nachgerueckt += 1
             if team.turnier.belegte_plaetze > team.turnier.max_teams:
                 self.message_user(
@@ -164,13 +175,28 @@ class TeamAdmin(admin.ModelAdmin):
                     f"({team.turnier.belegte_plaetze} von {team.turnier.max_teams}).", messages.WARNING,
                 )
         if nachgerueckt:
-            self.message_user(request, f"{nachgerueckt} Team(s) von der Warteliste nachgerückt.", messages.SUCCESS)
+            self.message_user(request, f"{nachgerueckt} Team(s) von der Warteliste nachgerückt, Mail verschickt.",
+                              messages.SUCCESS)
         else:
             self.message_user(request, "Keines der gewählten Teams steht auf der Warteliste.", messages.WARNING)
 
     @admin.display(description="Spieler", ordering="_anzahl_spieler")
     def anzahl_spieler(self, obj):
         return obj._anzahl_spieler
+
+    @admin.display(description="Warteliste", ordering="angemeldet_am")
+    def wartelisten_platz(self, obj):
+        return f"#{obj.wartelisten_platz}" if obj.wartelisten_platz else ""
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        self._auffuellen(request, [obj.turnier])
+
+    def _auffuellen(self, request, turniere):
+        for turnier in turniere:
+            for team in warteliste.auffuellen(turnier, request):
+                self.message_user(request, f"{team} ist automatisch von der Warteliste nachgerückt (Mail verschickt).",
+                                  messages.SUCCESS)
 
     @admin.display(description="Bearbeitungslink")
     def bearbeitungslink(self, obj):

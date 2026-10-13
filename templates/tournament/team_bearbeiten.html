@@ -26,7 +26,7 @@
 {% if team.status == "abgesagt" %}
   <div class="hinweis hinweis--fehler">Euer Team ist abgemeldet. Wollt ihr doch spielen, meldet euch bei der Orga.</div>
 {% elif team.status == "warteliste" %}
-  <div class="hinweis hinweis--warnung">Ihr steht auf der Warteliste. Sagt ein Team ab, rückt ihr nach.</div>
+  <div class="hinweis hinweis--warnung">Ihr steht auf <b>Platz {{ team.wartelisten_platz }}</b> der Warteliste. {% if turnier.warteliste_automatisch %}Wird ein Platz frei, rückt ihr automatisch nach und bekommt eine Mail.{% else %}Wird ein Platz frei, entscheidet die Orga über das Nachrücken – ihr bekommt dann eine Mail.{% endif %}</div>
 {% else %}
   <div class="stapel">
     <div class="fortschritt">

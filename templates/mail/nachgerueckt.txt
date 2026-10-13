@@ -1,0 +1,17 @@
+{% autoescape off %}Hallo {{ team.kapitaen_name }},
+
+gute Nachricht: Bei {{ turnier.name }} ist ein Platz frei geworden – "{{ team.name }}" ist von der Warteliste nachgerückt.
+Status: {{ team.get_status_display }}
+
+Über euren Bearbeitungslink könnt ihr die Spielerliste prüfen und ändern{% if not turnier.meldeschluss_vorbei %} (bis {{ turnier.meldeschluss|date:"j.n.Y, H:i" }} Uhr){% endif %}:
+{{ link }}
+{% if not team.bezahlt %}
+Startgebühr: {{ turnier.startgebuehr_eur|floatformat:"-2" }} €. Sobald sie bei uns eingegangen ist, ist euer Team bestätigt.
+{% if turnier.zahlungsinfo %}{{ turnier.zahlungsinfo }}
+Verwendungszweck: {{ turnier.name }} – {{ team.name }}
+{% endif %}{% endif %}
+Falls ihr nicht mehr könnt, meldet euch bitte {% if turnier.meldeschluss_vorbei %}bei der Orga{% else %}über den Link{% endif %} ab, damit das nächste Team nachrücken kann.
+
+Sportliche Grüße
+eure Orga
+{% endautoescape %}
