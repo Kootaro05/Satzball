@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block titel %}Spielplan{% if turnier %} · {{ turnier.name }}{% endif %}{% endblock %}
+{% block inhalt %}
+<div class="stapel stapel--eng">
+  <h1 class="titel titel--m">Spielplan</h1>
+  {% if turnier %}
+    <span class="leise">{{ turnier.datum|date:"D, j. M" }} · {{ turnier.ort }} · {% if satz_modus %}{{ turnier.get_gewinnsaetze_display }}{% else %}ein Satz bis {{ turnier.punkte_pro_satz }}{% endif %}</span>
+  {% endif %}
+</div>
+
+{% if not slots %}
+  <p class="leise">Der Spielplan wird gerade erstellt. Schau bald wieder rein.</p>
+{% else %}
+  <div class="stapel">
+    {% for slot in slots %}
+      {% if slot.zeit == ko_beginn %}
+        <div class="karte karte--akzent">
+          <span class="liste__name">ab {{ ko_beginn|time:"G:i" }} · K.-o.-Runde</span>
+          {% if ko_hinweis %}<span class="leise klein">{{ ko_hinweis }} Danach Spiel um Platz 3 und Finale.</span>{% endif %}
+        </div>
+      {% endif %}
+      <section class="slot{% if slot.laeuft %} slot--live{% endif %}" aria-label="{{ slot.zeit|time:'G:i' }} Uhr">
+        <div class="slot__kopf">
+          <span class="slot__zeit">{{ slot.zeit|time:"G:i" }}</span>
+          {% if slot.laeuft %}<span class="badge badge--bestaetigt badge--punkt">Läuft</span>{% endif %}
+        </div>
+        <div class="slot__spiele">
+          {% for s in slot.spiele %}
+            <div class="partie{% if s.status == 'beendet' %} partie--fertig{% endif %}">
+              <span class="partie__tag">Feld {{ s.feld }} · {{ s.titel }}</span>
+              <div class="partie__zeile{% if s.a_gewinnt %} partie__zeile--sieger{% endif %}">
+                <span>{{ s.team_a|default:s.platzhalter_a|default:"?" }}</span>
+                <span class="partie__wert">{% if s.status == 'beendet' %}{{ s.wert_a }}{% endif %}</span>
+              </div>
+              <div class="partie__zeile{% if s.b_gewinnt %} partie__zeile--sieger{% endif %}">
+                <span>{{ s.team_b|default:s.platzhalter_b|default:"?" }}</span>
+                <span class="partie__wert">{% if s.status == 'beendet' %}{{ s.wert_b }}{% endif %}</span>
+              </div>
+              <span class="partie__detail">
+                {% if s.status == 'beendet' %}{% if satz_modus and s.punkte_a is not None and s.punkte_b is not None %}Ballpunkte {{ s.punkte_a }}:{{ s.punkte_b }}{% else %}Endstand{% endif %}{% elif slot.laeuft %}läuft{% else %}noch offen{% endif %}
+              </span>
+              {% if s.schiri_team %}<span class="partie__detail">Schiri: {{ s.schiri_team }}</span>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% endfor %}
+  </div>
+
+  <div class="stapel" id="tabelle">
+    <h2 class="zwischen zwischen--l">Tabelle</h2>
+    {% for gruppe, tabelle in tabellen %}
+      <div class="stapel stapel--eng">
+        {% if tabellen|length > 1 %}<h3 class="zwischen">Gruppe {{ gruppe.name }}</h3>{% endif %}
+        {% include "tournament/_tabelle.html" %}
+      </div>
+    {% endfor %}
+    <span class="leise klein">
+      {% if satz_modus %}Sp = Spiele · S = Siege · SD = Satzdifferenz · BD = Ballpunktdifferenz. Sortiert nach Siegen, SD, BD, direktem Vergleich.{% else %}Sp = Spiele · S = Siege · PD = Punktdifferenz. Sortiert nach Siegen, PD, erzielten Punkten, direktem Vergleich.{% endif %}
+      {{ ko_hinweis }}
+    </span>
+  </div>
+{% endif %}
+{% endblock %}

@@ -165,6 +165,24 @@ b, strong { font-weight: 700; }
 .text h2 { font: 700 20px var(--kond); text-transform: uppercase; margin: 20px 0 6px; }
 .text p, .text ul { margin: 0 0 10px; }
 
+/* Öffentlicher Spielplan (Screen 05) */
+.slot { display: flex; flex-direction: column; gap: 8px; }
+.slot__kopf { display: flex; align-items: center; gap: 10px; }
+.slot__zeit { font: 700 20px var(--kond); }
+.slot__spiele { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.slot--live .partie { border-color: var(--gr); }
+.partie { background: var(--sf); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.partie__tag { font-weight: 600; font-size: 12px; color: var(--mut); }
+.partie__zeile { display: flex; justify-content: space-between; gap: 8px; font-weight: 500; }
+.partie__zeile span:first-child { overflow-wrap: anywhere; }
+.partie__zeile--sieger { font-weight: 700; }
+.partie__wert { font: 700 18px/1.2 var(--kond); font-variant-numeric: tabular-nums; }
+.partie__detail { font-size: 12px; color: var(--mut); }
+.karte--akzent { background: var(--acs); border-color: transparent; gap: 4px; }
+.karte--akzent .liste__name { color: var(--ac); }
+html { scroll-behavior: smooth; }
+#tabelle { scroll-margin-top: 12px; }
+
 /* Orga-Seiten: Spielplan (Laptop) und Ergebnis-Eingabe (Handy) */
 .app--breit { max-width: 1180px; }
 .kopf__nav { display: flex; gap: 16px; flex-wrap: wrap; font-weight: 600; font-size: 14px; }

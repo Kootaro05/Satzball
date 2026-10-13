@@ -289,6 +289,25 @@ def schiris_neu(turnier):
                 p.spiel.save(update_fields=["schiri_team"])
 
 
+def titel_setzen(spiele):
+    """Spieltitel: "Gruppe A" bzw. "Halbfinale 1" (Nummer nach Zeit und Feld)."""
+    zaehler = {}
+    for s in sorted(spiele, key=lambda s: (s.uhrzeit is None, s.uhrzeit, s.feld)):
+        if s.phase == Spiel.Phase.GRUPPE:
+            s.titel = f"Gruppe {s.gruppe.name}" if s.gruppe else "Gruppenspiel"
+        elif s.phase in (Spiel.Phase.FINALE, Spiel.Phase.PLATZ_3):
+            s.titel = s.get_phase_display()
+        else:
+            zaehler[s.phase] = zaehler.get(s.phase, 0) + 1
+            s.titel = f"{s.get_phase_display()} {zaehler[s.phase]}"
+    return spiele
+
+
+def mit_titeln(turnier):
+    """Alle Spiele eines Turniers mit Teams und gesetztem `titel`."""
+    return titel_setzen(list(turnier.spiele.select_related("gruppe", "team_a", "team_b", "schiri_team")))
+
+
 def tauschen(spiel, anderes):
     spiel.uhrzeit, anderes.uhrzeit = anderes.uhrzeit, spiel.uhrzeit
     spiel.feld, anderes.feld = anderes.feld, spiel.feld

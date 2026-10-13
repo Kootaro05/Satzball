@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -7,10 +8,13 @@ from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from . import spielplan as plan
 from .forms import AnmeldeForm, spieler_formset
-from .models import Spieler, Team, Turnier
+from .models import Spiel, Spieler, Team, Turnier
+from .tabelle import gruppentabellen
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +42,59 @@ def teamliste(request):
     return render(request, "tournament/teamliste.html", {
         "turnier": turnier,
         "teams": _sichtbare_teams(turnier) if turnier else [],
+    })
+
+
+def laufender_slot(turnier, slots, jetzt):
+    """Slot, der gerade läuft: der erste mit offenen Spielen – aber erst ab seiner geplanten
+    Startzeit am Spieltag. So folgt die Anzeige dem echten Stand, auch wenn das Turnier hinterherhängt."""
+    for slot in slots:
+        if any(s.status == Spiel.Status.GEPLANT for s in slot["spiele"]):
+            beginn = timezone.make_aware(datetime.combine(turnier.datum, slot["zeit"]))
+            am_spieltag = timezone.localtime(jetzt).date() == turnier.datum
+            return slot["zeit"] if am_spieltag and beginn <= jetzt else None
+    return None
+
+
+def _ko_hinweis(turnier, anzahl_gruppen):
+    if turnier.modus != Turnier.Modus.GRUPPEN_KO:
+        return ""
+    return {
+        2: "Platz 1 und 2 jeder Gruppe ziehen ins Halbfinale ein.",
+        3: "Die Gruppensieger und der beste Gruppenzweite ziehen ins Halbfinale ein.",
+        4: "Platz 1 und 2 jeder Gruppe ziehen ins Viertelfinale ein.",
+    }.get(anzahl_gruppen, "")
+
+
+def spielplan(request):
+    turnier = Turnier.aktuelles()
+    if not turnier or not turnier.spielplan_veroeffentlicht:
+        return render(request, "tournament/spielplan.html", {"turnier": turnier})
+
+    jetzt = timezone.now()
+    satz_modus = turnier.zaehlmodus == Turnier.Zaehlmodus.SAETZE
+    spiele = [s for s in plan.mit_titeln(turnier) if s.uhrzeit]
+    for s in spiele:
+        s.wert_a, s.wert_b = (s.saetze_a, s.saetze_b) if satz_modus else (s.punkte_a, s.punkte_b)
+        fertig = s.status == Spiel.Status.BEENDET and None not in (s.wert_a, s.wert_b)
+        s.a_gewinnt = fertig and s.wert_a > s.wert_b
+        s.b_gewinnt = fertig and s.wert_b > s.wert_a
+    slots = [
+        {"zeit": zeit, "spiele": sorted((s for s in spiele if s.uhrzeit == zeit), key=lambda s: s.feld)}
+        for zeit in sorted({s.uhrzeit for s in spiele})
+    ]
+    live = laufender_slot(turnier, slots, jetzt)
+    for slot in slots:
+        slot["laeuft"] = slot["zeit"] == live
+    tabellen = gruppentabellen(turnier)
+    ko = [s for s in spiele if s.phase != Spiel.Phase.GRUPPE]
+    return render(request, "tournament/spielplan.html", {
+        "turnier": turnier,
+        "slots": slots,
+        "tabellen": tabellen,
+        "ko_beginn": min((s.uhrzeit for s in ko), default=None),
+        "ko_hinweis": _ko_hinweis(turnier, len(tabellen)),
+        "satz_modus": satz_modus,
     })
 
 
