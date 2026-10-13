@@ -47,12 +47,14 @@ def spielplan_druck(request):
         return redirect("orga_spielplan")
     spiele = _spiele(turnier)
     zeilen, felder, ende = _raster(turnier, spiele)
+    gruppen = list(turnier.gruppen.order_by("name"))
     return render(request, "tournament/orga/druck.html", {
         "turnier": turnier,
         "zeilen": zeilen,
         "felder": felder,
         "ende": ende,
-        "gruppen": [(g, list(g.teams.order_by("name"))) for g in turnier.gruppen.order_by("name")],
+        # bei "Jeder gegen jeden" (eine Gruppe) stehen ohnehin alle Teams in der Tabelle
+        "gruppen": [(g, list(g.teams.order_by("name"))) for g in gruppen] if len(gruppen) > 1 else [],
     })
 
 

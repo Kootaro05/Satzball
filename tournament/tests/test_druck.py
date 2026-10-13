@@ -40,6 +40,15 @@ class DruckansichtTests(TestCase):
         self.assertNotContains(r, "geheim@example.de")
         self.assertNotContains(r, "online:")  # kein öffentlicher Link, solange nicht veröffentlicht
 
+    def test_jeder_gegen_jeden_ohne_gruppenliste(self):
+        self.t.modus = Turnier.Modus.JEDER_GEGEN_JEDEN
+        self.t.save()
+        spielplan.erzeugen(self.t)
+        self.client.force_login(User.objects.create_superuser("orga", "o@example.de", "x"))
+        r = self.client.get(self.url)
+        self.assertContains(r, "Team 0 –")
+        self.assertNotContains(r, "Gruppe A:</b>", html=False)  # alle Teams stehen ohnehin in der Tabelle
+
     def test_link_auf_den_oeffentlichen_spielplan(self):
         self.t.oeffentlich = self.t.spielplan_veroeffentlicht = True
         self.t.save()
