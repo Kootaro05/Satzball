@@ -12,7 +12,7 @@ from tournament.models import Spiel, Team, Turnier
 class OeffentlicherSpielplanTests(TestCase):
     def setUp(self):
         self.t = Turnier.objects.create(
-            name="Cup", datum=timezone.localdate() + timedelta(days=3), beginn=time(9, 30), ort="Halle",
+            name="Cup", oeffentlich=True, datum=timezone.localdate() + timedelta(days=3), beginn=time(9, 30), ort="Halle",
             max_teams=10, meldeschluss=timezone.now() + timedelta(days=1), modus=Turnier.Modus.GRUPPEN_KO,
         )
         for i in range(6):

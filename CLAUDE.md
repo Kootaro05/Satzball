@@ -65,8 +65,10 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
 - Zahlungs-Tracking im Admin (Teamliste): Haken "bezahlt" und Zahlungsart direkt in der Liste,
   Kennzahlen aus `Turnier.zahlungsuebersicht()` (erwartet = Gebühr × Teams mit Startplatz),
   Filter "Unbezahlt (mit Startplatz)", Aktion "Von der Warteliste nachrücken".
+- Sichtbarkeit: Besucher sehen nur Turniere mit `Turnier.oeffentlich` (Standard aus, die Orga schaltet frei).
+  Öffentliche Seiten nutzen `Turnier.aktuelles(nur_oeffentliche=True)`, Orga/Admin sehen alle.
 - Turnier-Wahl (öffentlich): `views.gewaehltes_turnier(request)` – `?turnier=<id>` (in der Session gemerkt),
-  sonst `Turnier.aktuelles()`. Liste unter `/turniere/`; bei einem anderen als dem aktuellen Turnier zeigt
+  sonst das aktuelle öffentliche Turnier. Liste unter `/turniere/`; bei einem anderen als dem aktuellen Turnier zeigt
   `base.html` einen Hinweis (Block `banner`, auf Orga- und Kapitänsseiten leer).
 - Admin-Optik: `templates/admin/base_site.html` + `static/css/admin.css` (nur Django-CSS-Variablen,
   Schrift, Rundungen). Turnier im Punkte-Modus: `static/js/admin_turnier.js` graut Satz-Felder aus

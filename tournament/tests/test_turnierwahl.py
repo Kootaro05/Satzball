@@ -12,11 +12,11 @@ class TurnierwahlTests(TestCase):
     def setUp(self):
         heute = timezone.localdate()
         self.aktuell = Turnier.objects.create(
-            name="Herbst-Cup", datum=heute + timedelta(days=10), ort="Halle", max_teams=8,
+            name="Herbst-Cup", oeffentlich=True, datum=heute + timedelta(days=10), ort="Halle", max_teams=8,
             meldeschluss=timezone.now() + timedelta(days=5), anmeldung_offen=True, min_spieler=2,
         )
         self.alt = Turnier.objects.create(
-            name="Frühjahrs-Cup", datum=heute - timedelta(days=150), ort="Halle", max_teams=8,
+            name="Frühjahrs-Cup", oeffentlich=True, datum=heute - timedelta(days=150), ort="Halle", max_teams=8,
             meldeschluss=timezone.now() - timedelta(days=160),
         )
         Team.objects.create(turnier=self.alt, name="Altes Team", kapitaen_name="K", kapitaen_email="k@example.de")
@@ -52,6 +52,28 @@ class TurnierwahlTests(TestCase):
         self.assertContains(self.client.get(reverse("anmelden")), "Anmeldung geschlossen")
         self.client.get(reverse("startseite"), {"turnier": self.aktuell.pk})
         self.assertContains(self.client.get(reverse("anmelden")), "Team anmelden")
+
+    def test_entwurf_ist_unsichtbar(self):
+        entwurf = Turnier.objects.create(
+            name="Geheimer Entwurf", datum=timezone.localdate() + timedelta(days=3), ort="Halle", max_teams=8,
+            meldeschluss=timezone.now() + timedelta(days=1), anmeldung_offen=True,
+        )
+        # früher als das aktuelle, wäre also ohne das Feld "aktuelles Turnier" geworden
+        self.assertEqual(self.client.get(reverse("startseite")).context["turnier"], self.aktuell)
+        self.assertNotContains(self.client.get(reverse("turniere")), "Geheimer Entwurf")
+        r = self.client.get(reverse("startseite"), {"turnier": entwurf.pk})  # auch nicht per Link
+        self.assertEqual(r.context["turnier"], self.aktuell)
+        self.assertNotContains(r, "Geheimer Entwurf")
+        self.client.get(reverse("startseite"), {"turnier": entwurf.pk})
+        self.assertNotContains(self.client.get(reverse("anmelden")), "Geheimer Entwurf")
+        # die Orga sieht ihn weiterhin
+        self.assertEqual(Turnier.aktuelles(), entwurf)
+
+    def test_ohne_oeffentliche_turniere(self):
+        Turnier.objects.update(oeffentlich=False)
+        r = self.client.get(reverse("startseite"))
+        self.assertIsNone(r.context["turnier"])
+        self.assertContains(r, "kein Turnier geplant")
 
     def test_turnierliste(self):
         r = self.client.get(reverse("turniere"))

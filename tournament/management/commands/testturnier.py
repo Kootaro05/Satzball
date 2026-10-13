@@ -36,7 +36,7 @@ class Command(BaseCommand):
         jetzt = timezone.localtime()
         beginn = (jetzt + timedelta(minutes=30 - jetzt.minute % 30)).time().replace(second=0, microsecond=0)
         turnier = Turnier.objects.create(
-            name=f"Probelauf {jetzt:%d.%m.%Y %H:%M}", datum=jetzt.date(), beginn=beginn, ort="Campus-Halle",
+            name=f"Probelauf {jetzt:%d.%m.%Y %H:%M}", oeffentlich=True, datum=jetzt.date(), beginn=beginn, ort="Campus-Halle",
             startgebuehr_eur=20, meldeschluss=jetzt + timedelta(days=1), max_teams=teams + 2,
             anmeldung_offen=True, modus=modus, zaehlmodus=zaehlmodus,
             zahlungsinfo="Testturnier – bitte nichts überweisen.",

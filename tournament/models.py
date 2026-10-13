@@ -34,6 +34,11 @@ class Turnier(models.Model):
         BEST_OF_5 = 3, "Best of 5"
 
     name = models.CharField(max_length=100)
+    oeffentlich = models.BooleanField(
+        "öffentlich sichtbar", default=False,
+        help_text="Erst dann sehen Besucher das Turnier (Startseite, Turnierliste, Anmeldung). "
+                  "Entwürfe und Testturniere ausgeschaltet lassen.",
+    )
     datum = models.DateField()
     beginn = models.TimeField(null=True, blank=True, help_text="Startzeit am Spieltag, z. B. 9:30.")
     ort = models.CharField(max_length=200)
@@ -78,10 +83,12 @@ class Turnier(models.Model):
         return self.name
 
     @classmethod
-    def aktuelles(cls):
-        """Das nächste anstehende Turnier, sonst das zuletzt gelaufene."""
+    def aktuelles(cls, nur_oeffentliche=False):
+        """Das nächste anstehende Turnier, sonst das zuletzt gelaufene.
+        Öffentliche Seiten fragen mit nur_oeffentliche=True, die Orga sieht alle."""
+        turniere = cls.objects.filter(oeffentlich=True) if nur_oeffentliche else cls.objects.all()
         heute = timezone.localdate()
-        return cls.objects.filter(datum__gte=heute).order_by("datum").first() or cls.objects.first()
+        return turniere.filter(datum__gte=heute).order_by("datum").first() or turniere.first()
 
     @property
     def vorbei(self):

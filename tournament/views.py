@@ -20,25 +20,25 @@ logger = logging.getLogger(__name__)
 
 
 def gewaehltes_turnier(request):
-    """Turnier aus ?turnier=<id> (wird in der Session gemerkt), sonst die gemerkte Wahl, sonst das aktuelle.
-    Ungültige oder gelöschte Turniere fallen still auf das aktuelle zurück."""
+    """Öffentliches Turnier aus ?turnier=<id> (wird in der Session gemerkt), sonst die gemerkte Wahl,
+    sonst das aktuelle. Ungültige, gelöschte oder nicht öffentliche Turniere fallen still auf das aktuelle zurück."""
     turnier_id = request.GET.get("turnier") or request.session.get("turnier_id")
     if turnier_id and str(turnier_id).isdigit():
-        turnier = Turnier.objects.filter(pk=turnier_id).first()
+        turnier = Turnier.objects.filter(pk=turnier_id, oeffentlich=True).first()
         if turnier:
             if request.session.get("turnier_id") != turnier.pk:
                 request.session["turnier_id"] = turnier.pk
             return turnier
     request.session.pop("turnier_id", None)
-    return Turnier.aktuelles()
+    return Turnier.aktuelles(nur_oeffentliche=True)
 
 
 def turniere(request):
-    aktuelles = Turnier.aktuelles()
+    aktuelles = Turnier.aktuelles(nur_oeffentliche=True)
     return render(request, "tournament/turniere.html", {
         "turnier": gewaehltes_turnier(request),
         "aktuelles": aktuelles,
-        "turniere": Turnier.objects.order_by("-datum"),
+        "turniere": Turnier.objects.filter(oeffentlich=True).order_by("-datum"),
     })
 
 
@@ -55,7 +55,7 @@ def startseite(request):
     teams = _sichtbare_teams(turnier) if turnier else []
     return render(request, "tournament/startseite.html", {
         "turnier": turnier,
-        "weitere_turniere": turnier and Turnier.objects.exclude(pk=turnier.pk).exists(),
+        "weitere_turniere": turnier and Turnier.objects.filter(oeffentlich=True).exclude(pk=turnier.pk).exists(),
         "teams": teams,
         "plaetze": [i < turnier.belegte_plaetze for i in range(turnier.max_teams)] if turnier else [],
     })

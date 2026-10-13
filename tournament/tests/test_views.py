@@ -10,7 +10,7 @@ from tournament.models import Spieler, Team, Turnier
 
 def turnier(**kwargs):
     werte = dict(
-        name="Herbst-Cup 2026", datum=timezone.localdate() + timedelta(days=30), ort="Campus-Halle",
+        name="Herbst-Cup 2026", oeffentlich=True, datum=timezone.localdate() + timedelta(days=30), ort="Campus-Halle",
         meldeschluss=timezone.now() + timedelta(days=10), max_teams=10,
         min_spieler=2, max_spieler=4, anmeldung_offen=True, startgebuehr_eur=20,
     )

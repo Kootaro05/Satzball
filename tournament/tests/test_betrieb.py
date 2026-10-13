@@ -95,7 +95,7 @@ class TeamdatenLoeschenTests(TestCase):
 class AnmeldungPflichtfelderTests(TestCase):
     def test_kapitaen_bleibt_pflicht(self):
         Turnier.objects.create(
-            name="Cup", datum=timezone.localdate() + timedelta(days=5), ort="Halle", max_teams=10,
+            name="Cup", oeffentlich=True, datum=timezone.localdate() + timedelta(days=5), ort="Halle", max_teams=10,
             meldeschluss=timezone.now() + timedelta(days=2), anmeldung_offen=True, min_spieler=1,
         )
         r = self.client.post(reverse("anmelden"), {
@@ -117,6 +117,7 @@ class BefehleTests(TestCase):
         self.assertEqual(Team.objects.im_spielplan().count(), 8)
         self.assertEqual(t.teams.filter(bezahlt=False).count(), 2)
         self.assertTrue(t.spielplan_veroeffentlicht)
+        self.assertTrue(t.oeffentlich)
         self.assertEqual(t.spiele.filter(phase=Spiel.Phase.GRUPPE).count(), 12)  # 2 Gruppen à 4
         self.assertFalse(t.teams.exclude(kapitaen_email__endswith="@example.invalid").exists())
         self.assertIn("Spielplan erzeugt", ausgabe.getvalue())
