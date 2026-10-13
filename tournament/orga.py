@@ -91,6 +91,7 @@ def spielplan_seite(request):
         "anzahl_spiele": len(spiele),
         "ende": ende,
         "konflikte": spielplan.konflikte(spiele),
+        "entscheidungen": ko.offene_entscheidungen(turnier),
         "tabellen": gruppentabellen(turnier),
         "ohne_zeit": [s for s in spiele if not s.uhrzeit],
     })

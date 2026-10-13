@@ -199,7 +199,11 @@ class SpielAdmin(admin.ModelAdmin):
     search_fields = ["team_a__name", "team_b__name", "platzhalter_a", "platzhalter_b"]
     fieldsets = [
         (None, {"fields": ["turnier", "phase", "gruppe", "runde", "uhrzeit", "feld", "status"]}),
-        ("Teams", {"fields": [("team_a", "platzhalter_a"), ("team_b", "platzhalter_b"), "schiri_team"]}),
+        ("Teams", {
+            "fields": [("team_a", "platzhalter_a"), ("team_b", "platzhalter_b"), "schiri_team"],
+            "description": "K.-o.-Spiele werden aus dem Platzhalter automatisch befüllt. "
+                           "Für ein Team von Hand (z. B. nach einem Entscheidungssatz) den Platzhalter leeren.",
+        }),
         ("Ergebnis", {"fields": [("saetze_a", "saetze_b"), ("punkte_a", "punkte_b")]}),
     ]
 

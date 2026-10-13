@@ -94,10 +94,12 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
   der Tabelle), offene Spiele der betroffenen Gruppe werden ohne das Team neu gepaart, alle offenen
   Spiele rücken ab dem nächsten freien Slot lückenlos auf, K.-o. danach.
 - Tabelle: `tournament/tabelle.py` (`berechnen`, `gruppentabellen`), zählt nur beendete Gruppenspiele.
-  `Zeile.gleichstand` markiert, wenn auch der direkte Vergleich nicht trennt (Reihenfolge dann alphabetisch).
+  `Zeile.gleichstand` nennt die Teams, die auch der direkte Vergleich nicht trennt (nur bei Ringschluss ab 3 Teams).
 - K.-o.-Runde füllt sich automatisch (`tournament/ko.py`, nach jedem gespeicherten Ergebnis in Orga-Seite
   und Admin): Platzhalter wie "1. Gruppe A", "Bester Gruppenzweiter" (Schnitt pro Spiel), "Sieger HF 1".
   Offene K.-o.-Spiele folgen Korrekturen, beendete bleiben. Manuell setzen = Platzhalter leeren.
+  Echter Gleichstand um einen K.-o.-Platz wird nie alphabetisch vergeben: Platz bleibt leer,
+  `ko.offene_entscheidungen` → Hinweis „Entscheidungssatz spielen“ (Meldung + Kasten auf der Orga-Spielplanseite).
 - Öffentlich `/spielplan/` (Screen 05): Spiele nach Uhrzeit und Feld, Ergebnisse. Gruppentabellen auf
   eigener Seite `/tabelle/` (Abweichung vom Design, damit der Menüpunkt aktiv markiert wird).
   Untere Navigation mit Inline-SVG-Symbolen. "Läuft" = erster Slot mit offenen Spielen, sobald seine Startzeit am Spieltag erreicht ist

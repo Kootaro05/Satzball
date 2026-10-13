@@ -95,6 +95,14 @@
       <h2 class="zwischen zwischen--l">Vorschau</h2>
       <span class="leise klein">Spiel ziehen und auf einem anderen Slot ablegen – die Spiele tauschen. Ein Klick öffnet die Ergebnis-Eingabe.</span>
     </div>
+    {% if entscheidungen %}
+      <div class="karte karte--akzent">
+        <span class="liste__name">Offene Entscheidungen</span>
+        {% for e in entscheidungen %}
+          <span class="klein">{{ e.text }} <a href="{% url 'admin:tournament_spiel_change' e.spiel.pk %}">{{ e.spiel.titel }} im Admin öffnen →</a></span>
+        {% endfor %}
+      </div>
+    {% endif %}
     {% for k in konflikte %}<div class="hinweis hinweis--fehler">{{ k }}</div>{% endfor %}
     {% if zeilen %}
       <div class="plan" style="--felder: {{ felder|length }}">

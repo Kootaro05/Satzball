@@ -8,12 +8,17 @@ offenen K.-o.-Spielen die Teams ein, deren Platzhalter sich schon auflösen lass
 - "Bester Gruppenzweiter": sobald alle Gruppen fertig sind; Vergleich nach Schnitt pro Spiel
 - "Sieger/Verlierer VF|HF <n>": sobald das Spiel beendet ist
 
+Steht ein Platz nach Tabelle und direktem Vergleich nicht fest (echter Gleichstand), wird er nicht
+nach dem Alphabet vergeben, sondern bleibt leer; die Orga bekommt eine offene Entscheidung
+("Entscheidungssatz spielen lassen, Sieger im Admin eintragen").
+
 Der Platzhalter ist die Quelle: Wird ein Ergebnis korrigiert, ändert sich das Team in noch offenen
-K.-o.-Spielen mit. Beendete K.-o.-Spiele bleiben unverändert. Wer ein Team von Hand setzen will,
-leert im Admin den Platzhalter.
+K.-o.-Spielen mit. Beendete K.-o.-Spiele bleiben unverändert. Wer ein Team von Hand setzt, leert im
+Admin den Platzhalter.
 """
 
 import re
+from dataclasses import dataclass
 
 from . import spielplan
 from .models import Spiel, Turnier
@@ -23,6 +28,23 @@ GRUPPENPLATZ = re.compile(r"^(\d+)\. Gruppe ([A-Z])$")
 VORRUNDE = re.compile(r"^(Sieger|Verlierer) (VF|HF) (\d+)$")
 BESTER_ZWEITER = "Bester Gruppenzweiter"
 RUNDE = {"VF": "Viertelfinale", "HF": "Halbfinale"}
+
+
+@dataclass
+class Entscheidung:
+    """Ein K.-o.-Platz, den die Tabelle nicht entscheiden kann."""
+    spiel: Spiel
+    platzhalter: str
+    teams: tuple
+
+    @property
+    def text(self):
+        namen = " und ".join(", ".join(t.name for t in self.teams).rsplit(", ", 1))
+        return (
+            f"{self.platzhalter}: Gleichstand zwischen {namen} – auch der direkte Vergleich entscheidet nicht. "
+            f"Bitte einen Entscheidungssatz spielen lassen und den Sieger im Admin bei „{self.spiel.titel}“ "
+            "eintragen (dort den Platzhalter leeren)."
+        )
 
 
 def _schnitt(zeile, satz_modus):
@@ -40,10 +62,10 @@ def _verlierer(spiel):
     return spiel.team_b if sieger == spiel.team_a else spiel.team_a
 
 
-def aktualisieren(turnier):
-    """Offene K.-o.-Spiele befüllen. Gibt Meldungen für die Orga zurück (neu gesetzte Spiele, Gleichstände)."""
+def _planen(turnier):
+    """Was in offenen K.-o.-Spielen stehen müsste: ({(spiel, seite): team oder None}, [Entscheidung])."""
     if turnier.modus != Turnier.Modus.GRUPPEN_KO:
-        return []
+        return {}, []
     satz_modus = turnier.zaehlmodus == Turnier.Zaehlmodus.SAETZE
     spiele = spielplan.mit_titeln(turnier)
     for s in spiele:
@@ -57,55 +79,70 @@ def aktualisieren(turnier):
     alle_gruppen_fertig = bool(fertig) and len(fertig) == turnier.gruppen.count()
     ko_spiele = [s for s in spiele if s.phase != Spiel.Phase.GRUPPE]
     nach_titel = {s.titel: s for s in ko_spiele}
-    genutzte_gruppen = set()
 
     def aufloesen(platzhalter):
+        """(team, None) wenn klar, (None, teams) bei echtem Gleichstand, (None, None) wenn noch offen."""
         if m := GRUPPENPLATZ.match(platzhalter):
             platz, name = int(m.group(1)), m.group(2)
             tabelle = fertig.get(name)
-            if tabelle and len(tabelle) >= platz:
-                genutzte_gruppen.add(name)
-                return tabelle[platz - 1].team
-            return None
+            if not tabelle or len(tabelle) < platz:
+                return None, None
+            zeile = tabelle[platz - 1]
+            return (None, zeile.gleichstand) if zeile.gleichstand else (zeile.team, None)
         if platzhalter == BESTER_ZWEITER:
             if not alle_gruppen_fertig:
-                return None
+                return None, None
             zweite = [t[1] for t in fertig.values() if len(t) >= 2]
             if not zweite:
-                return None
-            genutzte_gruppen.update(fertig)
-            return min(zweite, key=lambda z: (*(-w for w in _schnitt(z, satz_modus)), str(z.team))).team
+                return None, None
+            bester = max(_schnitt(z, satz_modus) for z in zweite)
+            kandidaten = [z for z in zweite if _schnitt(z, satz_modus) == bester]
+            if len(kandidaten) > 1:
+                return None, tuple(z.team for z in kandidaten)
+            if kandidaten[0].gleichstand:  # Platz 2 in der eigenen Gruppe ist selbst offen
+                return None, kandidaten[0].gleichstand
+            return kandidaten[0].team, None
         if m := VORRUNDE.match(platzhalter):
             art, runde, nummer = m.groups()
             vorher = nach_titel.get(f"{RUNDE[runde]} {nummer}")
             if not vorher or vorher.status != Spiel.Status.BEENDET:
-                return None
-            return vorher.sieger if art == "Sieger" else _verlierer(vorher)
-        return None
+                return None, None
+            return (vorher.sieger if art == "Sieger" else _verlierer(vorher)), None
+        return None, None
 
-    meldungen = []
+    soll, entscheidungen = {}, []
     for spiel in sorted(ko_spiele, key=lambda s: (s.uhrzeit is None, s.uhrzeit, s.feld, s.pk)):
         if spiel.status != Spiel.Status.GEPLANT:
             continue
-        geaendert = False
         for seite in ("a", "b"):
             platzhalter = getattr(spiel, f"platzhalter_{seite}")
-            team = aufloesen(platzhalter) if platzhalter else None
-            if team and getattr(spiel, f"team_{seite}_id") != team.pk:
-                setattr(spiel, f"team_{seite}", team)
-                geaendert = True
-        if geaendert:
-            spiel.save(update_fields=["team_a", "team_b"])
-            a = spiel.team_a or spiel.platzhalter_a
-            b = spiel.team_b or spiel.platzhalter_b
-            meldungen.append(f"{spiel.titel}: {a} – {b}")
+            if not platzhalter:
+                continue
+            team, gleichstand = aufloesen(platzhalter)
+            if gleichstand:
+                entscheidungen.append(Entscheidung(spiel, platzhalter, gleichstand))
+                soll[(spiel, seite)] = None  # nicht nach dem Alphabet vergeben
+            elif team:
+                soll[(spiel, seite)] = team
+    return soll, entscheidungen
 
-    if meldungen:
-        for name in sorted(genutzte_gruppen):
-            gleich = [z.team.name for z in fertig[name][:3] if z.gleichstand]
-            if gleich:
-                meldungen.append(
-                    f"Achtung, Gruppe {name}: Gleichstand zwischen {', '.join(gleich)} – auch der direkte "
-                    "Vergleich entscheidet nicht, die Reihenfolge ist nur alphabetisch. Bitte prüfen."
-                )
-    return meldungen
+
+def offene_entscheidungen(turnier):
+    """K.-o.-Plätze, die ein Entscheidungssatz klären muss (für die Orga-Spielplanseite)."""
+    return _planen(turnier)[1]
+
+
+def aktualisieren(turnier):
+    """Offene K.-o.-Spiele befüllen. Gibt Meldungen für die Orga zurück (geänderte Spiele, offene Entscheidungen)."""
+    soll, entscheidungen = _planen(turnier)
+    geaendert = []
+    for (spiel, seite), team in soll.items():
+        if getattr(spiel, f"team_{seite}_id") != (team.pk if team else None):
+            setattr(spiel, f"team_{seite}", team)
+            if spiel not in geaendert:
+                geaendert.append(spiel)
+    meldungen = []
+    for spiel in geaendert:
+        spiel.save(update_fields=["team_a", "team_b"])
+        meldungen.append(f"{spiel.titel}: {spiel.team_a or spiel.platzhalter_a} – {spiel.team_b or spiel.platzhalter_b}")
+    return meldungen + [e.text for e in entscheidungen]
