@@ -62,7 +62,7 @@ Werte eintragen, speichern mit **Strg + O**, **Enter**, beenden mit **Strg + X**
 **3. Container starten** – Port nur lokal, damit niemand nginx umgehen kann
 
 ```bash
-sudo docker run -d --name satzball --restart unless-stopped -p 127.0.0.1:8000:8000 -v satzball-data:/app/data --env-file /etc/satzball.env satzball
+sudo docker run -d --name satzball --restart unless-stopped -p 127.0.0.1:8000:8000 -v satzball-data:/app/data --env-file /etc/satzball.env --log-opt max-size=10m --log-opt max-file=3 satzball
 ```
 
 Prüfen (Domain ersetzen), erwartet `HTTP/1.1 200 OK`:
@@ -175,7 +175,7 @@ sudo docker stop satzball && sudo docker rm satzball
 ```
 
 ```bash
-sudo docker run -d --name satzball --restart unless-stopped -p 127.0.0.1:8000:8000 -v satzball-data:/app/data --env-file /etc/satzball.env satzball
+sudo docker run -d --name satzball --restart unless-stopped -p 127.0.0.1:8000:8000 -v satzball-data:/app/data --env-file /etc/satzball.env --log-opt max-size=10m --log-opt max-file=3 satzball
 ```
 
 Die Daten bleiben im Volume `satzball-data` erhalten. Vor dem Update auf GitHub prüfen, dass der
@@ -256,3 +256,17 @@ Gut zu wissen:
 ```bash
 sudo docker logs -f satzball
 ```
+
+Das Container-Log enthält keine Zugriffe (Gunicorn schreibt kein Access-Log, IP-Adressen stehen nur im
+nginx-Log), sondern nur Start-Meldungen und Fehler, z. B. „Mail für Team 12 konnte nicht verschickt werden“.
+Damit es nicht unbegrenzt wächst, begrenzt `--log-opt max-size=10m --log-opt max-file=3` es auf 30 MB;
+ältere Einträge löscht Docker selbst. Nach Tagen rotieren kann Docker nicht. Beim Update (Container neu
+anlegen) beginnt das Log ohnehin von vorn.
+
+Ein laufender Container behält seine alten Log-Einstellungen. Prüfen, erwartet `map[max-file:3 max-size:10m]`:
+
+```bash
+sudo docker inspect -f '{{.HostConfig.LogConfig.Config}}' satzball
+```
+
+Steht dort `map[]`, den Container einmal wie unter „Update einspielen“ neu anlegen.
