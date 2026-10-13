@@ -127,5 +127,11 @@ LOGGING = {
     "loggers": {"tournament": {"handlers": ["console"], "level": "INFO"}},
 }
 
-# Hinter einem HTTPS-Reverse-Proxy (nur wirksam, wenn der Proxy den Header setzt).
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# DJANGO_HTTPS=1 nur auf dem Server hinter nginx (siehe docs/betrieb.md):
+# - dem Header X-Forwarded-Proto vom Proxy vertrauen. Ohne Proxy könnte ihn jeder fälschen, deshalb
+#   nur zusammen mit diesem Schalter und mit dem Container-Port an 127.0.0.1 gebunden.
+# - Cookies nur über HTTPS. Lokal aus, sonst klappt der Login über http nicht.
+if os.environ.get("DJANGO_HTTPS") == "1":
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True

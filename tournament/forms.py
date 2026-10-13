@@ -18,6 +18,8 @@ class AnmeldeForm(forms.ModelForm):
     def __init__(self, *args, turnier, **kwargs):
         super().__init__(*args, **kwargs)
         self.turnier = turnier
+        self.fields["kapitaen_name"].required = True
+        self.fields["kapitaen_email"].required = True
 
     def clean_name(self):
         name = self.cleaned_data["name"].strip()

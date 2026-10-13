@@ -179,6 +179,8 @@ So wenig Daten wie möglich: Name der Spieler, eine E-Mail pro Team. Keine Telef
 | Umplanen nach Löschen | Offene Spiele neu, Ergebnisse bleiben | Beendete Spiele bleiben stehen; offene Spiele der Gruppe werden neu gepaart und rücken auf |
 | Anzahl Gruppen | Orga wählt 2–4, App schlägt vor | Vorschlag: höchstens 5 Teams pro Gruppe |
 | K.-o. bei 3/4 Gruppen | 3: Gruppensieger + bester Zweiter, 4: Viertelfinale | Platzhalter im Spielplan, Teams trägt die Orga ein |
+| Löschfrist | Admin-Aktion per Klick | "Teamdaten löschen" beim Turnier, erst nach dem Turniertag; Teamnamen und Ergebnisse bleiben |
+| Proxy auf dem VPS | Vorhandener nginx | Container nur auf 127.0.0.1, nginx macht HTTPS (siehe `docs/betrieb.md`) |
 
 **Noch offen:**
 
