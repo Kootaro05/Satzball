@@ -118,6 +118,13 @@ class BefehleTests(TestCase):
         self.assertEqual(t.teams.filter(bezahlt=False).count(), 2)
         self.assertTrue(t.spielplan_veroeffentlicht)
         self.assertTrue(t.oeffentlich)
+        timberborn = t.teams.get(name="Timberborn-Volleys")
+        self.assertEqual((timberborn.kapitaen_name, timberborn.bezahlt), ("Maxim Stremel (Coach)", True))
+        self.assertEqual(
+            list(timberborn.spieler.order_by("pk").values_list("vorname", "nachname")),
+            [("Maxim", "Stremel"), ("Leon", "P."), ("Martin", "K."),
+             ("Max", "K."), ("Leon", "S."), ("Oliver", "M.")],
+        )
         self.assertEqual(t.spiele.filter(phase=Spiel.Phase.GRUPPE).count(), 12)  # 2 Gruppen à 4
         self.assertFalse(t.teams.exclude(kapitaen_email__endswith="@example.invalid").exists())
         self.assertIn("Spielplan erzeugt", ausgabe.getvalue())
