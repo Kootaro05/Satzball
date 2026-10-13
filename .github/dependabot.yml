@@ -1,0 +1,25 @@
+# Dependabot: schlägt einmal im Monat Updates als PR vor (je Bereich ein gebündelter PR).
+# Sicherheits-Updates kommen unabhängig davon sofort, wenn "Dependabot security updates"
+# in den Repo-Einstellungen aktiv ist.
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      python-pakete:
+        patterns: ["*"]
+    ignore:
+      # Bei Django auf der LTS-Version 5.2 bleiben; Sprung auf eine neue Hauptversion bewusst selbst machen.
+      - dependency-name: "django"
+        update-types: ["version-update:semver-major"]
+    commit-message:
+      prefix: "Abhängigkeiten"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "Docker"
