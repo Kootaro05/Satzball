@@ -33,22 +33,16 @@ Der Container führt beim Start automatisch `migrate` aus.
 
 ## nginx
 
-Beispiel für `/etc/nginx/sites-available/satzball` (Zertifikat z. B. mit `certbot --nginx -d volleyball.example.de`):
+Erst einen einfachen Block für Port 80 anlegen, dann holt `certbot` das Zertifikat und trägt HTTPS
+samt Weiterleitung selbst ein. (Eine fertige 443-Konfiguration vorab würde an noch fehlenden
+Zertifikatsdateien scheitern.)
+
+`/etc/nginx/sites-available/satzball`:
 
 ```nginx
 server {
     listen 80;
     server_name volleyball.example.de;
-    return 301 https://$host$request_uri;
-}
-
-server {
-    listen 443 ssl;
-    http2 on;
-    server_name volleyball.example.de;
-
-    ssl_certificate     /etc/letsencrypt/live/volleyball.example.de/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/volleyball.example.de/privkey.pem;
 
     location / {
         proxy_pass http://127.0.0.1:8000;
@@ -62,10 +56,16 @@ server {
 ```bash
 sudo ln -s /etc/nginx/sites-available/satzball /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d volleyball.example.de   # Weiterleitung auf HTTPS bestätigen
 ```
 
-`X-Forwarded-Proto` ist wichtig: Daran erkennt Django, dass die Seite über HTTPS kam
-(sonst scheitert der Admin-Login an der CSRF-Prüfung). Statische Dateien liefert die App selbst aus.
+Danach `https://volleyball.example.de/admin/` aufrufen und anmelden. Vorher (nur http) klappt der
+Login nicht, weil `DJANGO_HTTPS=1` die Cookies auf HTTPS beschränkt.
+
+`X-Forwarded-Proto` ist wichtig: Daran erkennt Django, dass die Seite über HTTPS kam (sonst scheitert
+der Login an der CSRF-Prüfung). Django vertraut diesem Header nur mit `DJANGO_HTTPS=1` – deshalb muss
+der Container-Port an `127.0.0.1` gebunden sein, damit niemand nginx umgehen kann.
+Statische Dateien liefert die App selbst aus.
 
 ## Update einspielen
 
@@ -87,14 +87,24 @@ docker exec satzball python manage.py sicherung          # legt /app/data/sicher
 docker cp satzball:/app/data/sicherungen ./sicherungen    # vom Server herunterkopieren
 ```
 
-Es bleiben die 14 neuesten Sicherungen (`--behalten N` ändert das). Täglich per Cronjob, z. B.:
+Es bleiben die 14 neuesten Sicherungen (`--behalten N`, `--behalten 0` behält alle). Täglich per Cronjob, z. B.:
 
 ```cron
 30 3 * * * docker exec satzball python manage.py sicherung >/dev/null
 ```
 
-Wiederherstellen: Container stoppen, gewünschte Sicherung als `/app/data/db.sqlite3` ins Volume kopieren,
-Container starten.
+**Wiederherstellen** – mit dem Satzball-Image kopieren, damit die Datei dem App-Benutzer gehört
+(als root hineinkopiert könnte die App sie nicht mehr schreiben):
+
+```bash
+docker exec satzball ls /app/data/sicherungen            # gewünschte Sicherung aussuchen
+docker stop satzball
+docker run --rm -v satzball-data:/app/data satzball cp /app/data/sicherungen/db-2026-11-14-033000.sqlite3 /app/data/db.sqlite3
+docker start satzball
+```
+
+Eine heruntergeladene Sicherung vorher zurück ins Volume legen:
+`docker cp db-….sqlite3 satzball:/app/data/sicherungen/` (geht auch bei gestopptem Container).
 
 ## Probelauf
 
@@ -109,8 +119,16 @@ Mails gehen an `@example.invalid` und kommen nicht an. Das Testturnier ist bis z
 ## Nach dem Turnier (Datenschutz)
 
 Im Admin unter Turniere das Turnier auswählen → Aktion „Teamdaten löschen (Datenschutz)“.
-Löscht Spieler, Kapitänsdaten und Notizen und macht die Bearbeitungslinks ungültig; Teamnamen und
-Ergebnisse bleiben. Geht erst nach dem Turniertag und fragt vorher nach.
+Löscht Spieler, Kapitänsdaten, Notizen und das Admin-Änderungsprotokoll zu diesen Teams und macht die
+Bearbeitungslinks ungültig; Teamnamen und Ergebnisse bleiben. Geht erst nach dem Turniertag und fragt
+vorher nach.
+
+Gut zu wissen:
+
+- Die gelöschten Daten stecken noch in den **Sicherungen**, bis diese rotiert sind (bei täglicher
+  Sicherung und `--behalten 14` also höchstens 14 Tage).
+- Ohne `EMAIL_HOST` stehen die Mails samt **Bearbeitungslink** im Container-Log (`docker logs`).
+  Für den echten Betrieb SMTP eintragen.
 
 ## Logs
 

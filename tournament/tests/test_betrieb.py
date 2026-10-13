@@ -48,6 +48,27 @@ class TeamdatenLoeschenTests(TestCase):
         self.t.refresh_from_db()
         self.assertEqual(self.t.teamdaten_geloescht_am, timezone.localdate())
 
+    def test_admin_protokoll_mit_namen_wird_geloescht(self):
+        from django.contrib.admin.models import CHANGE, LogEntry
+        from django.contrib.contenttypes.models import ContentType
+
+        team = self.t.teams.first()
+        admin = User.objects.get(username="orga")
+        LogEntry.objects.create(
+            user=admin, content_type=ContentType.objects.get_for_model(Team), object_id=str(team.pk),
+            object_repr=team.name, action_flag=CHANGE,
+            change_message='[{"added": {"name": "Spieler", "object": "Lena Hoffmann"}}]',
+        )
+        anderes = Turnier.objects.create(name="Anderes", datum=self.t.datum, ort="Halle", max_teams=4,
+                                         meldeschluss=self.t.meldeschluss)
+        LogEntry.objects.create(
+            user=admin, content_type=ContentType.objects.get_for_model(Turnier), object_id=str(anderes.pk),
+            object_repr=anderes.name, action_flag=CHANGE, change_message="[]",
+        )
+        self.t.teamdaten_loeschen()
+        self.assertFalse(LogEntry.objects.filter(change_message__contains="Lena Hoffmann").exists())
+        self.assertTrue(LogEntry.objects.filter(object_repr="Anderes").exists())  # anderes bleibt
+
     def test_admin_aktion_fragt_erst_nach(self):
         r = self.aktion()
         self.assertContains(r, "Ja, Teamdaten löschen")

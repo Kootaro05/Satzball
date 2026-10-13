@@ -110,8 +110,17 @@ class Turnier(models.Model):
 
     def teamdaten_loeschen(self):
         """Datenschutz: Spieler, Kapitänsdaten und Notizen löschen, Bearbeitungslinks ungültig machen.
+        Auch das Änderungsprotokoll des Admins zu diesen Teams und Spielern (enthält Namen) wird gelöscht.
         Teamnamen und Ergebnisse bleiben."""
-        Spieler.objects.filter(team__turnier=self).delete()
+        from django.contrib.admin.models import LogEntry
+        from django.contrib.contenttypes.models import ContentType
+
+        spieler = Spieler.objects.filter(team__turnier=self)
+        for model, ids in [(Team, self.teams.values_list("pk", flat=True)), (Spieler, spieler.values_list("pk", flat=True))]:
+            LogEntry.objects.filter(
+                content_type=ContentType.objects.get_for_model(model), object_id__in=[str(pk) for pk in ids],
+            ).delete()
+        spieler.delete()
         for team in self.teams.all():
             Team.objects.filter(pk=team.pk).update(
                 kapitaen_name="", kapitaen_email="", notiz="", edit_token=neuer_edit_token(),

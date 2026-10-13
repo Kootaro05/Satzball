@@ -16,7 +16,7 @@ class Command(BaseCommand):
     help = "Sichert die Datenbank nach data/sicherungen/ und behält die neuesten Sicherungen."
 
     def add_arguments(self, parser):
-        parser.add_argument("--behalten", type=int, default=14, help="Anzahl Sicherungen, die bleiben (Standard: 14)")
+        parser.add_argument("--behalten", type=int, default=14, help="Anzahl Sicherungen, die bleiben (Standard: 14, 0 = alle behalten)")
 
     def handle(self, *args, behalten, **options):
         ordner = settings.DATA_DIR / "sicherungen"

@@ -35,7 +35,7 @@ Umgebungsvariablen (alle optional): `DJANGO_DEBUG` (lokal Standard `1`, im Conta
 `DJANGO_CSRF_TRUSTED_ORIGINS` (z. B. `https://volleyball.example.de`, nötig hinter HTTPS-Proxy),
 `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS`, `DEFAULT_FROM_EMAIL`
 (ohne `EMAIL_HOST` werden Mails nur in die Konsole/das Log geschrieben).
-`DJANGO_HTTPS=1` (auf dem Server hinter nginx: Cookies nur über HTTPS).
+`DJANGO_HTTPS=1` (nur auf dem Server hinter nginx: vertraut `X-Forwarded-Proto`, Cookies nur über HTTPS).
 Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/satzball.env.example`.
 
 ## Fachliche Regeln
@@ -85,7 +85,8 @@ Betrieb (nginx, Update, Sicherung, Probelauf): `docs/betrieb.md`, Vorlage `docs/
   (folgt dem echten Stand, nicht nur der Uhr). Nur sichtbar, wenn
   `Turnier.spielplan_veroeffentlicht`. Keine E-Mails oder Zahlungsdaten auf öffentlichen Seiten.
 - Datenschutz nach dem Turnier: Admin-Aktion "Teamdaten löschen" (`Turnier.teamdaten_loeschen`), erst nach
-  dem Turniertag, mit Bestätigung. Löscht Spieler, Kapitänsdaten, Notizen, macht Links ungültig;
+  dem Turniertag, mit Bestätigung. Löscht Spieler, Kapitänsdaten, Notizen und das Admin-Protokoll
+  dazu, macht Links ungültig;
   Teamnamen und Ergebnisse bleiben. Deshalb sind `kapitaen_name/-email` im Model optional
   (im Anmeldeformular Pflicht).
 - Befehle: `testturnier [--teams N] [--spielplan]` (Probelauf), `sicherung [--behalten N]`
