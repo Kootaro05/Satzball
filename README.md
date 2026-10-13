@@ -90,7 +90,7 @@ satzball/
 
 ## 🔒 Datenschutz
 
-Gespeichert wird nur das Nötigste: Spielernamen und eine E-Mail-Adresse pro Team. Öffentlich sichtbar sind nur Teamnamen und Ergebnisse. Teamdaten werden nach einer festen Frist nach dem Turnier gelöscht.
+Gespeichert wird nur das Nötigste: Spielernamen und eine E-Mail-Adresse pro Team. Öffentlich sichtbar sind Teamnamen, Spielernamen und Ergebnisse; E-Mail-Adresse und Zahlungsstatus sieht nur die Orga. Teamdaten werden nach einer festen Frist nach dem Turnier gelöscht.
 
 ## 🗺️ Roadmap
 

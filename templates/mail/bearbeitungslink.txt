@@ -1,0 +1,17 @@
+{% autoescape off %}Hallo {{ team.kapitaen_name }},
+
+eure Anmeldung von "{{ team.name }}" für {{ turnier.name }} ist eingegangen.
+Status: {{ team.get_status_display }}
+
+Über diesen Link könnt ihr eure Spielerliste bis zum Meldeschluss ({{ turnier.meldeschluss|date:"j.n.Y, H:i" }} Uhr) ändern:
+{{ link }}
+
+Bitte gebt den Link nicht weiter – wer ihn hat, kann das Team bearbeiten.
+{% if team.status != "warteliste" %}
+Startgebühr: {{ turnier.startgebuehr_eur|floatformat:"-2" }} €. Sobald sie bei uns eingegangen ist, ist euer Team bestätigt.
+{% if turnier.zahlungsinfo %}{{ turnier.zahlungsinfo }}
+Verwendungszweck: {{ turnier.name }} – {{ team.name }}
+{% endif %}{% endif %}
+Sportliche Grüße
+eure Orga
+{% endautoescape %}

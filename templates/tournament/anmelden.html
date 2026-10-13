@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titel %}Team anmelden · {{ turnier.name }}{% endblock %}
+{% block kopf %}<a class="zurueck" href="{% url 'startseite' %}">{{ turnier.name }}</a>{% endblock %}
+{% block nav %}{% endblock %}
+{% block inhalt %}
+<div class="stapel stapel--eng">
+  <h1 class="titel titel--m">Team anmelden</h1>
+  <span class="leise">Kein Konto nötig. Den Bearbeitungslink bekommst du per Mail.</span>
+</div>
+{% if not turnier.freie_plaetze %}
+  <div class="hinweis hinweis--warnung">Alle Plätze sind vergeben. Euer Team kommt auf die Warteliste.</div>
+{% endif %}
+
+<form method="post" class="formular" novalidate>
+  {% csrf_token %}
+  <div class="feld">
+    <label for="{{ form.name.id_for_label }}">Teamname</label>
+    {{ form.name }}
+    {{ form.name.errors }}
+  </div>
+
+  <div class="stapel">
+    <h2 class="zwischen">Kapitän</h2>
+    <div class="feld">
+      <label for="{{ form.kapitaen_name.id_for_label }}">Name</label>
+      {{ form.kapitaen_name }}
+      {{ form.kapitaen_name.errors }}
+    </div>
+    <div class="feld">
+      <label for="{{ form.kapitaen_email.id_for_label }}">E-Mail</label>
+      {{ form.kapitaen_email }}
+      <span class="hilfe">Hierhin schicken wir den Bearbeitungslink.</span>
+      {{ form.kapitaen_email.errors }}
+    </div>
+  </div>
+
+  {% include "tournament/_spieler_formset.html" %}
+
+  <div class="feld">
+    <label class="check">
+      {{ form.datenschutz }}
+      <span>Ich habe die <a href="{% url 'datenschutz' %}" target="_blank">Datenschutzhinweise</a> gelesen. Namen der Spieler werden öffentlich in der Teamliste angezeigt.</span>
+    </label>
+    {{ form.datenschutz.errors }}
+  </div>
+
+  <div class="stapel stapel--eng">
+    <button type="submit" class="btn">Verbindlich anmelden</button>
+    <span class="leise klein mitte">Startgebühr {{ turnier.startgebuehr_eur|floatformat:"-2" }} € · bezahlt wird bar, per Überweisung oder PayPal</span>
+  </div>
+</form>
+{% endblock %}
+{% block skripte %}<script src="{% static 'js/spieler.js' %}"></script>{% endblock %}

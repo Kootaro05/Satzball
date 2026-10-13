@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titel %}Ergebnis · {{ spiel }}{% endblock %}
+{% block kopf %}
+<header class="kopf">
+  <a class="kopf__link" href="{% url 'orga_spielplan' %}?turnier={{ turnier.pk }}">← Spielplan</a>
+  <span class="badge badge--neutral">ORGA</span>
+</header>
+{% endblock %}
+{% block nav %}{% endblock %}
+{% block inhalt %}
+<div class="stapel stapel--eng">
+  <span class="leise">{% if spiel.feld %}Feld {{ spiel.feld }} · {% endif %}{% if spiel.uhrzeit %}{{ spiel.uhrzeit|time:"G:i" }} · {% endif %}{{ spiel.titel }}</span>
+  <span class="leise klein">{% if nummer %}Spiel {{ nummer }} von {{ anzahl }}{% endif %}{% if spiel.schiri_team %} · Schiri: {{ spiel.schiri_team }}{% endif %}</span>
+</div>
+
+{% if not spiel.team_a or not spiel.team_b %}
+  <h1 class="titel titel--m">{{ spiel.team_a|default:spiel.platzhalter_a|default:"?" }} – {{ spiel.team_b|default:spiel.platzhalter_b|default:"?" }}</h1>
+  <div class="hinweis hinweis--warnung">Die Teams stehen noch nicht fest. Bitte erst im Admin eintragen.</div>
+  <a class="btn btn--sekundaer" href="{% url 'admin:tournament_spiel_change' spiel.pk %}">Teams im Admin eintragen</a>
+{% elif korrigieren %}
+  <form method="post" class="formular" novalidate>
+    {% csrf_token %}
+    {% for f in fehler %}<div class="hinweis hinweis--fehler">{{ f }}</div>{% endfor %}
+    <div class="karte zaehler-karte">
+      {% if satz_modus %}
+        {% include "tournament/orga/_zaehler.html" with team=spiel.team_a name="saetze_a" wert=spiel.saetze_a max=turnier.gewinnsaetze %}
+        <span class="zaehler__trenner">:</span>
+        {% include "tournament/orga/_zaehler.html" with team=spiel.team_b name="saetze_b" wert=spiel.saetze_b max=turnier.gewinnsaetze %}
+      {% else %}
+        {% include "tournament/orga/_zaehler.html" with team=spiel.team_a name="punkte_a" wert=spiel.punkte_a max=None %}
+        <span class="zaehler__trenner">:</span>
+        {% include "tournament/orga/_zaehler.html" with team=spiel.team_b name="punkte_b" wert=spiel.punkte_b max=None %}
+      {% endif %}
+    </div>
+    <span class="leise klein mitte">
+      {% if satz_modus %}{{ turnier.get_gewinnsaetze_display }} – gewonnen mit {{ turnier.gewinnsaetze }} Satz{{ turnier.gewinnsaetze|pluralize:"en" }}{% else %}Ein Satz bis {{ turnier.punkte_pro_satz }} Punkte{% endif %}
+    </span>
+    {% if satz_modus %}
+      <details class="karte"{% if spiel.punkte_a or spiel.punkte_b %} open{% endif %}>
+        <summary class="liste__name">Ballpunkte gesamt (optional, für die Tabelle)</summary>
+        <div class="kacheln kacheln--lose">
+          <div class="feld">
+            <label for="punkte_a">{{ spiel.team_a }}</label>
+            <input type="number" min="0" inputmode="numeric" id="punkte_a" name="punkte_a" value="{{ spiel.punkte_a|default_if_none:"" }}">
+          </div>
+          <div class="feld">
+            <label for="punkte_b">{{ spiel.team_b }}</label>
+            <input type="number" min="0" inputmode="numeric" id="punkte_b" name="punkte_b" value="{{ spiel.punkte_b|default_if_none:"" }}">
+          </div>
+        </div>
+      </details>
+    {% endif %}
+    <button type="submit" class="btn">{% if spiel.status == "beendet" %}Korrektur speichern{% else %}Spiel beenden{% endif %}</button>
+  </form>
+{% else %}
+  <div class="karte zaehler-karte">
+    <div class="zaehler">
+      <span class="zaehler__team">{{ spiel.team_a }}</span>
+      <span class="zaehler__wert">{% if satz_modus %}{{ spiel.saetze_a }}{% else %}{{ spiel.punkte_a }}{% endif %}</span>
+    </div>
+    <span class="zaehler__trenner">:</span>
+    <div class="zaehler">
+      <span class="zaehler__team">{{ spiel.team_b }}</span>
+      <span class="zaehler__wert">{% if satz_modus %}{{ spiel.saetze_b }}{% else %}{{ spiel.punkte_b }}{% endif %}</span>
+    </div>
+  </div>
+  <div class="hinweis">✓ Gespeichert. Sieger: {{ spiel.sieger }}</div>
+  <a class="btn-link btn-link--neutral" href="?korrigieren=1">Korrigieren</a>
+{% endif %}
+
+{% if naechstes %}
+  <a class="btn btn--sekundaer" href="{% url 'orga_ergebnis' naechstes.pk %}">Nächstes · {{ naechstes.uhrzeit|time:"G:i" }} →</a>
+{% endif %}
+{% if parallel %}
+  <div class="stapel stapel--eng">
+    <h2 class="zwischen">Gleichzeitig</h2>
+    <div class="liste">
+      {% for s in parallel %}
+        <a class="liste__zeile" href="{% url 'orga_ergebnis' s.pk %}">
+          <span>Feld {{ s.feld }} · {{ s.team_a|default:s.platzhalter_a }} – {{ s.team_b|default:s.platzhalter_b }}</span>
+          <span>{% if s.status == "beendet" %}✓{% else %}Eintragen{% endif %}</span>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+{% endblock %}
+{% block skripte %}<script src="{% static 'js/ergebnis.js' %}"></script>{% endblock %}

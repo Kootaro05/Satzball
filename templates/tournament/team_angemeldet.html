@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block titel %}Anmeldung eingegangen · {{ turnier.name }}{% endblock %}
+{% block nav %}{% endblock %}
+{% block inhalt %}
+<div class="stapel">
+  {% if team.status == "warteliste" %}
+    <span class="erfolg-icon erfolg-icon--warte" aria-hidden="true">…</span>
+    <h1 class="titel titel--m">{{ team.name }}<br>auf der Warteliste</h1>
+    <span class="leise">Eure Anmeldung für {{ turnier.name }} ist eingegangen, aber alle Plätze sind vergeben. Sagt ein Team ab, rückt ihr nach.</span>
+  {% else %}
+    <span class="erfolg-icon" aria-hidden="true">✓</span>
+    <h1 class="titel titel--m">{{ team.name }}<br>sind dabei!</h1>
+    {% if team.hat_startplatz %}<span class="leise">Eure Anmeldung für {{ turnier.name }} ist eingegangen. Platz {{ team.startplatz_nr }} von {{ turnier.max_teams }} ist für euch reserviert.</span>{% endif %}
+  {% endif %}
+</div>
+
+<div class="wertrahmen">
+  {% include "tournament/_status.html" with gross=True prefix="Status: " %}
+  {% include "tournament/_zahlung.html" with gross=True kurz=True %}
+</div>
+
+<div class="karte">
+  <h2 class="zwischen">Check dein Postfach</h2>
+  <p>Wir haben den <b>Bearbeitungslink</b> an <b>{{ team.kapitaen_email }}</b> geschickt. Damit änderst du eure Spielerliste bis zum Meldeschluss.</p>
+  <p class="leise klein">Link nicht weitergeben – wer ihn hat, kann das Team bearbeiten. Keine Mail? Spam-Ordner prüfen.</p>
+</div>
+
+{% include "tournament/_zahlungsinfo.html" %}
+
+<a class="btn btn--sekundaer" href="{% url 'teamliste' %}">Zur Teamliste</a>
+{% endblock %}

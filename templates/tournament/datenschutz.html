@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titel %}Datenschutzhinweise · DHSN Volleyball{% endblock %}
+{% block inhalt %}
+<h1 class="titel titel--m">Datenschutz&shy;hinweise</h1>
+<div class="text">
+  {# ENTWURF – vor dem ersten echten Turnier prüfen lassen (offener Punkt in docs/konzept.md). #}
+  <p>Wir speichern nur, was wir für das Turnier brauchen.</p>
+  <h2>Was wir speichern</h2>
+  <ul>
+    <li>Teamname und Vor- und Nachnamen der Spieler</li>
+    <li>Name und E-Mail-Adresse des Kapitäns</li>
+    <li>Zahlungsstatus der Startgebühr (bezahlt, Datum, Zahlungsart)</li>
+  </ul>
+  <h2>Wer was sieht</h2>
+  <p>Öffentlich sichtbar sind Teamnamen, die Namen der Spieler, Spielplan und Ergebnisse. Die E-Mail-Adresse und den Zahlungsstatus sehen nur die Orga und der eigene Kapitän.</p>
+  <h2>Wofür</h2>
+  <p>Die E-Mail-Adresse nutzen wir nur, um den Bearbeitungslink zu schicken und bei Fragen zum Turnier Kontakt aufzunehmen.</p>
+  <h2>Wie lange</h2>
+  <p>Teams und Spieler werden einige Monate nach dem Turnier gelöscht. Ergebnisse dürfen bleiben.</p>
+</div>
+{% endblock %}

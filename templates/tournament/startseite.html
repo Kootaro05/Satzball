@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block inhalt %}
+{% if not turnier %}
+  <h1 class="titel">Volleyball an der DHSN</h1>
+  <p class="leise">Gerade ist kein Turnier geplant. Schau bald wieder vorbei.</p>
+{% else %}
+  <div class="stapel">
+    {% if turnier.anmeldung_moeglich %}
+      <span class="badge badge--bestaetigt badge--punkt badge--gross">Anmeldung offen</span>
+    {% else %}
+      <span class="badge badge--neutral badge--gross">Anmeldung geschlossen</span>
+    {% endif %}
+    <h1 class="titel">{{ turnier.name }}</h1>
+  </div>
+
+  <div class="kacheln">
+    <div class="kachel">
+      <span class="kachel__label">Datum</span>
+      <span class="kachel__wert">{{ turnier.datum|date:"D, j. M" }}</span>
+      <span class="kachel__zusatz">{% if turnier.beginn %}ab {{ turnier.beginn|time:"G:i" }} Uhr{% else %}{{ turnier.datum|date:"Y" }}{% endif %}</span>
+    </div>
+    <div class="kachel">
+      <span class="kachel__label">Ort</span>
+      <span class="kachel__wert">{{ turnier.ort }}</span>
+      <span class="kachel__zusatz">{{ turnier.anzahl_felder }} Feld{{ turnier.anzahl_felder|pluralize:"er" }}</span>
+    </div>
+    <div class="kachel">
+      <span class="kachel__label">Startgebühr</span>
+      <span class="kachel__wert">{{ turnier.startgebuehr_eur|floatformat:"-2" }} €</span>
+      <span class="kachel__zusatz">pro Team</span>
+    </div>
+    <div class="kachel">
+      <span class="kachel__label">Meldeschluss</span>
+      <span class="kachel__wert">{{ turnier.meldeschluss|date:"j. M" }}</span>
+      <span class="kachel__zusatz">{% if turnier.meldeschluss_vorbei %}vorbei{% else %}noch {{ turnier.tage_bis_meldeschluss }} Tag{{ turnier.tage_bis_meldeschluss|pluralize:"e" }}{% endif %}</span>
+    </div>
+  </div>
+
+  {% if turnier.anmeldung_moeglich %}
+    <div class="karte">
+      <span class="zahl"><b>{{ turnier.freie_plaetze }}</b> von {{ turnier.max_teams }} Plätzen frei</span>
+      <div class="plaetze" style="--anzahl: {{ turnier.max_teams }}" aria-hidden="true">
+        {% for belegt in plaetze %}<span{% if belegt %} class="belegt"{% endif %}></span>{% endfor %}
+      </div>
+      <span class="leise">Wenn alle Plätze vergeben sind, kommt ihr auf die Warteliste.</span>
+    </div>
+    <a class="btn" href="{% url 'anmelden' %}">Team anmelden <span aria-hidden="true">→</span></a>
+  {% endif %}
+
+  <div class="stapel">
+    <div class="kopfzeile">
+      <h2 class="zwischen zwischen--l">Angemeldet</h2>
+      {% if teams %}<a href="{% url 'teamliste' %}">Alle {{ teams|length }} Team{{ teams|length|pluralize:"s" }}</a>{% endif %}
+    </div>
+    {% if teams %}
+      <div class="liste">
+        {% for team in teams|slice:":5" %}
+          <div class="liste__zeile"><span class="liste__name">{{ team.name }}</span>{% include "tournament/_status.html" %}</div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="leise">Noch keine Teams. Seid die Ersten!</p>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

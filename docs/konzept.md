@@ -127,11 +127,11 @@ Acht Seiten reichen; drei davon liefert der Django Admin fast geschenkt.
 flowchart LR
     A[Anmeldung] --> B[Angemeldet]
     B --> C{Platz frei?}
-    C -- ja --> D[Bestätigt]
+    C -- ja --> B2[Platz reserviert]
     C -- nein --> W[Warteliste]
-    W -- rückt nach --> D
-    D -- Orga hakt ab --> E[Bezahlt]
-    E -- Spielplan erzeugen --> F[Im Spielplan]
+    W -- rückt nach --> B2
+    B2 -- Orga hakt bezahlt ab --> D[Bestätigt]
+    D -- Spielplan erzeugen --> F[Im Spielplan]
 ```
 
 Wer keinen Platz bekommt, landet auf der Warteliste und rückt bei einer Absage nach. In den Spielplan kommen nur Teams, deren Startgebühr die Orga abgehakt hat.
@@ -157,7 +157,7 @@ Keine Microservices, keine separate API, kein Kubernetes, kein Redis.
 
 So wenig Daten wie möglich: Name der Spieler, eine E-Mail pro Team. Keine Telefonnummern, keine Matrikelnummern.
 
-- Öffentlich sichtbar sind nur Teamnamen und Ergebnisse; Spielernamen sieht nur die Orga (und der eigene Kapitän).
+- Öffentlich sichtbar sind Teamnamen, Spielernamen und Ergebnisse; E-Mail und Zahlungsstatus sieht nur die Orga (und der eigene Kapitän).
 - Kurzer Datenschutzhinweis + Checkbox im Anmeldeformular.
 - Teams und Spieler eines Turniers nach einer festen Frist löschen (z. B. 3 Monate nach dem Turnier); Ergebnisse dürfen bleiben.
 
@@ -169,6 +169,16 @@ So wenig Daten wie möglich: Name der Spieler, eine E-Mail pro Team. Keine Telef
 | Sonderregeln | Keine Mixed-Regeln, normale Hallenvolleyball-Regeln | Anmeldung prüft nur min./max. Spieler |
 | Felder | 2 Felder | Slot-Verteilung auf 2 Felder ausgelegt |
 | Hosting | Privat | Eigener kleiner Server (VPS) mit Docker; Betreiber ist für Backups und Datenschutz verantwortlich |
+| Satzpunkte | Nicht einzeln speichern | Spiel hat nur `saetze_a/b` und `punkte_a/b` (Ballpunkt-Summe) |
+| K.-o.-Spiele vorab | Teams optional, Platzhalter-Text | Felder `platzhalter_a/b` am Spiel, z. B. "1. Gruppe B" |
+| Spielernamen | Öffentlich in der Teamliste | Hinweis im Anmeldeformular |
+| Bestätigung | Bezahlt = bestätigt | Haken "bezahlt" setzt Status automatisch auf bestätigt |
+| Besondere Runden | Erkennbar | Feld `phase` am Spiel (Viertelfinale, Halbfinale, Spiel um Platz 3, Finale) |
+| Team löschen | Auch mit geplanten Spielen | Spielplan wird danach automatisch neu erzeugt (Schritt 4) |
+| Warteliste | Orga entscheidet per Klick | Kein automatisches Nachrücken bei Absage; Admin-Aktion "Nachrücken" |
+| Umplanen nach Löschen | Offene Spiele neu, Ergebnisse bleiben | Beendete Spiele bleiben stehen; offene Spiele der Gruppe werden neu gepaart und rücken auf |
+| Anzahl Gruppen | Orga wählt 2–4, App schlägt vor | Vorschlag: höchstens 5 Teams pro Gruppe |
+| K.-o. bei 3/4 Gruppen | 3: Gruppensieger + bester Zweiter, 4: Viertelfinale | Platzhalter im Spielplan, Teams trägt die Orga ein |
 
 **Noch offen:**
 

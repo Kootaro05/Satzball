@@ -1,0 +1,18 @@
+{% extends "admin/change_list.html" %}
+{% block content %}
+{% if uebersicht %}
+<style>
+  .uebersicht { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 0 0 20px; }
+  .uebersicht div { border: 1px solid var(--hairline-color); border-radius: 8px; padding: 12px 16px; background: var(--body-bg); }
+  .uebersicht span { display: block; color: var(--body-quiet-color); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+  .uebersicht strong { display: block; font-size: 24px; margin: 4px 0 2px; }
+</style>
+<div class="uebersicht">
+  <div><span>Startgebühren eingegangen</span><strong>{{ uebersicht.eingegangen|floatformat:"-2" }} €</strong>von {{ uebersicht.erwartet|floatformat:"-2" }} € erwartet</div>
+  <div><span>Unbezahlt</span><strong>{{ uebersicht.unbezahlt }}</strong>Teams mit Startplatz</div>
+  <div><span>Warteliste</span><strong>{{ uebersicht.warteliste }}</strong>rücken per Aktion „Nachrücken“ nach</div>
+</div>
+<p class="help">Zahlen für <b>{{ uebersicht_turnier }}</b>. Haken „bezahlt“ setzen und speichern: Datum wird automatisch eingetragen, angemeldete Teams werden bestätigt.</p>
+{% endif %}
+{{ block.super }}
+{% endblock %}

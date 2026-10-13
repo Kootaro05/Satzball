@@ -1,0 +1,9 @@
+<header class="kopf">
+  <a class="marke" href="{% url 'startseite' %}">DHSN Volleyball</a>
+  <nav class="kopf__nav">
+    <a href="{% url 'admin:tournament_turnier_change' turnier.pk %}">Turnier</a>
+    <a href="{% url 'admin:tournament_team_changelist' %}?turnier__id__exact={{ turnier.pk }}">Teams</a>
+    <a href="{% url 'orga_spielplan' %}?turnier={{ turnier.pk }}" aria-current="page">Spielplan</a>
+    <a href="{% url 'admin:index' %}">Admin</a>
+  </nav>
+</header>

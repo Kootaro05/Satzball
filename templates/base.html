@@ -1,0 +1,37 @@
+{% load static %}<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titel %}{% if turnier %}{{ turnier.name }} · {% endif %}DHSN Volleyball{% endblock %}</title>
+  <link rel="preload" href="{% static 'fonts/barlow-400.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{% static 'css/satzball.css' %}">
+</head>
+<body>
+  <div class="app{% block app_klasse %}{% endblock %}">
+    {% block kopf %}
+    <header class="kopf">
+      <a class="marke" href="{% url 'startseite' %}">DHSN Volleyball</a>
+      {% if user.is_staff %}<a class="kopf__link" href="{% url 'orga_spielplan' %}">Orga</a>{% else %}<a class="kopf__link" href="{% url 'admin:index' %}">Orga-Login</a>{% endif %}
+    </header>
+    {% endblock %}
+
+    <main class="inhalt">
+      {% if messages %}
+      <ul class="meldungen">
+        {% for m in messages %}<li class="hinweis">{{ m }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+      {% block inhalt %}{% endblock %}
+    </main>
+
+    {% block nav %}
+    <nav class="nav">
+      <a href="{% url 'startseite' %}"{% if request.resolver_match.url_name == 'startseite' %} aria-current="page"{% endif %}>Turnier</a>
+      <a href="{% url 'teamliste' %}"{% if request.resolver_match.url_name == 'teamliste' %} aria-current="page"{% endif %}>Teams</a>
+    </nav>
+    {% endblock %}
+  </div>
+  {% block skripte %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block inhalt %}
+<div class="stapel stapel--eng">
+  <h1 class="titel titel--m">Teams</h1>
+  {% if turnier %}<span class="leise">{{ turnier.name }} · {{ turnier.belegte_plaetze }} von {{ turnier.max_teams }} Plätzen belegt</span>{% endif %}
+</div>
+{% if teams %}
+  <div class="liste">
+    {% for team in teams %}
+      <div class="team">
+        <div class="kopfzeile"><span class="liste__name">{{ team.name }}</span>{% include "tournament/_status.html" %}</div>
+        <p class="team__spieler">{% for s in team.spieler.all %}{{ s.vorname }} {{ s.nachname }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="leise">Noch keine Teams angemeldet.</p>
+{% endif %}
+{% if turnier.anmeldung_moeglich %}<a class="btn" href="{% url 'anmelden' %}">Team anmelden <span aria-hidden="true">→</span></a>{% endif %}
+{% endblock %}

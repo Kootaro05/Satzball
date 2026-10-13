@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block inhalt %}
+<h1 class="titel titel--m">Anmeldung geschlossen</h1>
+{% if turnier %}
+  <p class="leise">Für {{ turnier.name }} ist die Anmeldung {% if turnier.meldeschluss_vorbei %}seit dem Meldeschluss am {{ turnier.meldeschluss|date:"j. F, H:i" }} Uhr{% else %}gerade{% endif %} geschlossen. Bei Fragen meldet euch bei der Orga.</p>
+{% else %}
+  <p class="leise">Gerade ist kein Turnier geplant.</p>
+{% endif %}
+<a class="btn btn--sekundaer" href="{% url 'startseite' %}">Zur Startseite</a>
+{% endblock %}
